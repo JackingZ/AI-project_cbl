@@ -1,6 +1,8 @@
 <template>
   <div>
-    <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
+    <MoreInfoPanel v-if="moreVisible" owner-type="customer" :owner="current" @back="moreVisible = false" />
+
+    <SearchBar v-show="!moreVisible" :model="query" @search="handleSearch" @reset="handleReset">
       <el-form-item label="公司名称">
         <el-input v-model="query.name" placeholder="请输入公司名称" clearable style="width: 180px" />
       </el-form-item>
@@ -30,7 +32,7 @@
       </template>
     </SearchBar>
 
-    <PageCard>
+    <PageCard v-show="!moreVisible">
       <ProTable
         v-model:page="query.page"
         v-model:size="query.size"
@@ -38,7 +40,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="260"
+        :action-width="330"
         @change="loadData"
       >
         <template #col-region="{ row }">{{ [row.state, row.city, row.county].filter(Boolean).join(' / ') }}</template>
@@ -56,8 +58,10 @@
         <template #actions="{ row }">
           <el-button link type="primary" size="small" @click="openView(row)">查看</el-button>
           <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="openRelate(row)">关联人员</el-button>
+          <el-button link type="primary" size="small" @click="openBelong(row)">修改归属</el-button>
+          <el-button v-if="row.audit !== '已通过'" link type="warning" size="small" @click="openAudit(row)">审核</el-button>
           <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -71,6 +75,91 @@
       :on-import="handleImport"
       @done="loadData"
     />
+
+    <!-- 修改归属：变更所属上级 -->
+    <Modal v-model="belong.visible" title="修改所属公司" width="460px" :confirm-loading="belong.loading" @confirm="submitBelong">
+      <el-form label-width="90px">
+        <el-form-item label="所属上级">{{ belong.currentName || '-' }}</el-form-item>
+        <el-form-item label="新公司">
+          <el-select v-model="belong.parentName" placeholder="请选择" filterable clearable style="width: 100%">
+            <el-option v-for="p in parentOptions" :key="p" :label="p" :value="p" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </Modal>
+
+    <!-- 审核：客户审核结果 -->
+    <Modal v-model="audit.visible" title="客户审核" width="720px" :confirm-loading="audit.loading" @confirm="submitAudit">
+      <el-form ref="auditFormRef" :model="auditForm" :rules="auditRules" label-width="100px">
+        <el-row :gutter="16">
+          <el-col :span="12"><el-form-item label="公司名称">{{ auditForm.name || '-' }}</el-form-item></el-col>
+          <el-col :span="12"><el-form-item label="国家/地区">{{ auditForm.country || '-' }}</el-form-item></el-col>
+          <el-col :span="12"><el-form-item label="主体类型">{{ auditForm.entity || '-' }}</el-form-item></el-col>
+          <el-col :span="12"><el-form-item label="营业执照">{{ auditForm.licenseCode || '-' }}</el-form-item></el-col>
+          <el-col :span="12">
+            <el-form-item label="公司类型" prop="subtype">
+              <el-select v-model="auditForm.subtype" placeholder="请选择" style="width: 100%">
+                <el-option v-for="s in CUSTOMER_SUBTYPES" :key="s" :label="s" :value="s" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="合作期限" prop="coopPeriod">
+              <el-select v-model="auditForm.coopPeriod" placeholder="请选择" style="width: 100%">
+                <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="总分标识" prop="branch">
+              <el-select v-model="auditForm.branch" placeholder="请选择" style="width: 100%">
+                <el-option v-for="b in SUPPLIER_BRANCH" :key="b" :label="b" :value="b" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="审核结果" prop="audit">
+              <el-radio-group v-model="auditForm.audit">
+                <el-radio v-for="a in AUDIT_STATUS" :key="a" :value="a">{{ a }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="证件照片">
+              <div class="cert-list">
+                <div v-for="slot in CERT_SLOTS" :key="slot.key" class="cert-slot">
+                  <div v-if="certDocs[slot.key]" class="cert-item">
+                    <img :src="certDocs[slot.key].url" :alt="slot.label" @click="previewCert(certDocs[slot.key].url)" />
+                    <i class="cert-del" @click="removeCert(slot.key)"><el-icon><Close /></el-icon></i>
+                  </div>
+                  <el-upload
+                    v-else
+                    :show-file-list="false"
+                    :auto-upload="false"
+                    accept="image/*"
+                    :on-change="file => onCertChange(slot.key, file)"
+                  >
+                    <div class="cert-add"><el-icon><Plus /></el-icon><span>上传</span></div>
+                  </el-upload>
+                  <div class="cert-label">{{ slot.label }}</div>
+                </div>
+              </div>
+              <div class="cert-tip">支持 jpg/png，单张 ≤ 1MB（本地存储）</div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注">
+              <el-input v-model="auditForm.remark" type="textarea" :rows="2" placeholder="请输入审核备注" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </Modal>
+
+    <!-- 证件照片预览 -->
+    <el-dialog v-model="certPreview.visible" width="560px" append-to-body title="证件预览">
+      <img :src="certPreview.url" style="width: 100%" alt="证件预览" />
+    </el-dialog>
 
     <Modal v-model="dialog.visible" :title="dialog.title" width="720px" :confirm-loading="dialog.loading" @confirm="submit">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" :disabled="dialog.readonly">
@@ -244,22 +333,23 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { Plus, Upload } from '@element-plus/icons-vue'
+import { Plus, Upload, Close } from '@element-plus/icons-vue'
 import { useActivatedRefresh } from '@/utils/hooks'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import RelateStaffDialog from '@/components/Common/RelateStaffDialog.vue'
+import MoreInfoPanel from '@/components/Common/MoreInfoPanel.vue'
 import ImportDialog from '@/components/Common/ImportDialog.vue'
 import { confirmDelete } from '@/utils'
 import { required } from '@/utils/validate'
 import {
   getCustomerList, addCustomer, updateCustomer, deleteCustomer, toggleCustomerStatus,
-  bulkImportCustomer,
+  bulkImportCustomer, getParentCompanyOptions,
   REGIONS, CUSTOMER_SUBTYPES, ENTITY_TYPES, AUDIT_STATUS, CONTRACT_STATUS, STATUS_OPTIONS,
   CERT_TYPES, COOP_PERIODS, ADD_SOURCES, CUSTOMER_SOURCES, COMPANY_SIZES,
-  SALE_TYPES, PLATFORM_TYPES, PLATFORMS, YES_NO
+  SALE_TYPES, PLATFORM_TYPES, PLATFORMS, YES_NO, SUPPLIER_BRANCH
 } from '@/api/modules/organizers'
 
 defineOptions({ name: 'OrgCustomer' })
@@ -276,6 +366,89 @@ const relateVisible = ref(false)
 const importVisible = ref(false)
 const current = ref(null)
 const openRelate = row => { current.value = row; relateVisible.value = true }
+// 更多：附加信息子页面
+const moreVisible = ref(false)
+const openMore = row => { current.value = row; moreVisible.value = true }
+
+// 修改归属：变更所属上级
+const parentOptions = ref([])
+const belong = reactive({ visible: false, loading: false, id: null, currentName: '', parentName: '' })
+const openBelong = async row => {
+  if (!parentOptions.value.length) {
+    const res = await getParentCompanyOptions()
+    parentOptions.value = res.data
+  }
+  Object.assign(belong, { visible: true, id: row.id, currentName: row.parentName, parentName: '' })
+}
+const submitBelong = async () => {
+  if (!belong.parentName) return ElMessage.warning('请选择新公司')
+  belong.loading = true
+  try {
+    await updateCustomer(belong.id, { parentName: belong.parentName })
+    ElMessage.success('修改成功')
+    belong.visible = false
+    loadData()
+  } finally {
+    belong.loading = false
+  }
+}
+
+// 审核：客户审核结果
+const auditFormRef = ref(null)
+const audit = reactive({ visible: false, loading: false, id: null })
+const auditForm = reactive({ name: '', country: '', entity: '', licenseCode: '', subtype: '', coopPeriod: '', branch: '总部', audit: '待审核', remark: '' })
+const auditRules = {
+  subtype: [required('请选择公司类型', 'change')],
+  coopPeriod: [required('请选择合作期限', 'change')],
+  branch: [required('请选择总分标识', 'change')],
+  audit: [required('请选择审核结果', 'change')]
+}
+// 证件照片：三个固定槽位（身份证正/反面 + 营业执照），本地读为 base64 存客户记录
+const CERT_SLOTS = [
+  { key: 'front', label: '身份证正面' },
+  { key: 'back', label: '身份证反面' },
+  { key: 'license', label: '营业执照' }
+]
+const certDocs = reactive({ front: null, back: null, license: null })
+const certPreview = reactive({ visible: false, url: '' })
+const onCertChange = (key, file) => {
+  const raw = file.raw
+  if (raw.size > 1024 * 1024) return ElMessage.warning('单张图片不能超过 1MB')
+  const reader = new FileReader()
+  reader.onload = e => { certDocs[key] = { name: raw.name, url: e.target.result } }
+  reader.readAsDataURL(raw)
+}
+const removeCert = key => { certDocs[key] = null }
+const previewCert = url => { certPreview.url = url; certPreview.visible = true }
+
+const openAudit = row => {
+  Object.assign(auditForm, {
+    name: row.name, country: row.country, entity: row.entity, licenseCode: row.licenseCode,
+    subtype: row.subtype, coopPeriod: row.coopPeriod, branch: row.branch || '总部',
+    audit: row.audit, remark: row.remark || ''
+  })
+  const docs = row.certDocs || {}
+  Object.assign(certDocs, { front: docs.front || null, back: docs.back || null, license: docs.license || null })
+  Object.assign(audit, { visible: true, id: row.id })
+  auditFormRef.value?.clearValidate()
+}
+const submitAudit = async () => {
+  await auditFormRef.value.validate()
+  audit.loading = true
+  try {
+    await updateCustomer(audit.id, {
+      subtype: auditForm.subtype, coopPeriod: auditForm.coopPeriod, branch: auditForm.branch,
+      audit: auditForm.audit, remark: auditForm.remark,
+      certDocs: { front: certDocs.front, back: certDocs.back, license: certDocs.license }
+    })
+    ElMessage.success('审核已提交')
+    audit.visible = false
+    loadData()
+  } finally {
+    audit.loading = false
+  }
+}
+
 const importHeaders = [
   { label: '公司名称', field: 'name' },
   { label: '客户类型', field: 'subtype' },
@@ -407,3 +580,61 @@ const handleDelete = row =>
 
 useActivatedRefresh(loadData)
 </script>
+
+<style scoped lang="scss">
+.cert-list {
+  display: flex;
+  gap: $space-lg;
+}
+.cert-slot {
+  text-align: center;
+}
+.cert-item {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+  .cert-del {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: $font-xs;
+  }
+}
+.cert-add {
+  width: 100px;
+  height: 100px;
+  border: 1px dashed $border-color;
+  border-radius: $radius-base;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $text-placeholder;
+  cursor: pointer;
+  font-size: $font-xs;
+  &:hover { border-color: $primary-color; color: $primary-color; }
+}
+.cert-label {
+  margin-top: $space-xs;
+  font-size: $font-xs;
+  color: $text-secondary;
+}
+.cert-tip {
+  color: $text-placeholder;
+  font-size: $font-xs;
+  margin-top: $space-xs;
+}
+</style>

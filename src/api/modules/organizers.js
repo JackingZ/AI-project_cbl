@@ -548,6 +548,11 @@ export function updateAgent(id, data) { return agentResource.update(id, data) }
 export function deleteAgent(id) { return agentResource.remove(id) }
 export function toggleAgentStatus(id, status) { return agentResource.setStatus(id, status) }
 
+// 可选上级公司（客户“修改归属”用）：聚货通总部 + 全部代理商
+export function getParentCompanyOptions() {
+  return mockRequest(['聚货通总部', ...agentResource.raw().map(a => a.name)])
+}
+
 /* ---- 供应商 ---- */
 export function getSupplierList(p = {}) {
   const { name, country, status, page = 1, size = 10 } = p

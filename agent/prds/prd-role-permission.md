@@ -3,9 +3,11 @@
 | 项目 | 内容 |
 | --- | --- |
 | 模块 | 机构管理 - 权限设置 / 人员管理 |
-| 版本 | v1.0 |
+| 版本 | v1.1 |
 | 类型 | 原型阶段（纯前端 mock，localStorage 持久化，无后端） |
-| 关联文档 | [migration.md](./migration.md) 第九节 |
+| 关联文档 | [migration.md](../migration.md) 第九节（登录菜单过滤）、第十节 10.2（权限矩阵重建） |
+
+> **v1.1 变更**：权限设置页由「两级菜单树勾选」重建为原项目的「三级权限矩阵」（模块 → 页面〔菜单页面 / 操作权限两栏〕→ 按钮）。登录菜单过滤逻辑不变，页面勾选仍写 `menuPerms`；新增按钮级 `perms`。详见 §3.1、§四、§8.2。
 
 ## 一、背景与目标
 
@@ -33,12 +35,16 @@
 
 ## 三、功能需求
 
-### 3.1 角色权限配置（权限设置页）
+### 3.1 角色权限配置（权限设置页 · 三级权限矩阵）
 - 左侧角色列表，支持新增/编辑/删除角色。
-- 右侧菜单权限树（模块可折叠），勾选叶子页面即授权。
+- 右侧为**三级权限矩阵**（由 `MENU_TREE` 派生的 `PERM_MATRIX`）：
+  - **一级 模块**：如「机构管理 / 订单管理」，可折叠。
+  - **二级 页面**：每个页面一行，分「**菜单页面**」与「**操作权限**」两栏。勾选「菜单页面」= 授予该页访问权（写入 `menuPerms`，驱动登录菜单过滤）。
+  - **三级 按钮**：每个页面下的操作按钮（查看/新增/编辑/删除/导出），勾选写入 `perms`（操作级权限）。
+- 级联勾选：勾页面自动带出其按钮；全选/清空一键操作。
 - 提供「全选 / 清空 / 保存权限」。
 - 超级管理员显示「默认拥有全部权限」提示，不可编辑。
-- 保存后仅存叶子页面 path 到 `menuPerms`（模块父节点由勾选状态推导）。
+- 保存后：页面勾选 → `menuPerms`（仅叶子 path），按钮勾选 → `perms`（按钮 id）。
 
 ### 3.2 人员角色分配（人员管理页）
 - 新增/编辑人员时，「用户权限」下拉取自角色列表（同一数据源）。
@@ -60,7 +66,19 @@
 
 **角色记录**（localStorage: `jht_db_org_role`）
 ```js
-{ id, name, custType, menuPerms: ['/orderlist/whole-order', ...], perms, remark, createTime }
+{
+  id, name, custType,
+  menuPerms: ['/orderlist/whole-order', ...], // 页面访问权（驱动登录菜单过滤）
+  perms: ['/orderlist/whole-order:view', ...], // 按钮操作权（页面 path + ':' + 动作 key）
+  remark, createTime
+}
+```
+
+**权限矩阵派生常量**（`organizers.js`，由 `MENU_TREE` 派生，供配置界面渲染与全选）
+```js
+PERM_MATRIX     // 模块 → 页面 → 按钮(查看/新增/编辑/删除/导出) 三级结构
+ALL_MENU_PATHS  // 全部页面 path（页面全选用）
+ALL_PERM_IDS    // 全部按钮 id（按钮全选用）
 ```
 
 **权限缓存**（localStorage: `jht_menu_perms`）
@@ -98,7 +116,7 @@
 ```mermaid
 graph TD
   subgraph 配置层[配置层 · 机构管理]
-    A1[权限设置页 Role.vue<br/>勾选菜单树 MENU_TREE]
+    A1[权限设置页 Role.vue<br/>三级权限矩阵 PERM_MATRIX<br/>页面→menuPerms / 按钮→perms]
     A2[人员管理页 Personnel.vue<br/>给人员分配角色]
   end
 
@@ -159,10 +177,10 @@ flowchart TD
   LoadRoles --> SelectRole[点击选择角色]
   SelectRole --> IsSuper{是超级管理员?}
   IsSuper -- 是 --> ShowTip[显示「默认全部权限」\n树不可编辑]
-  IsSuper -- 否 --> ShowTree[展示 MENU_TREE\n恢复已勾选项]
-  ShowTree --> Edit[勾选/取消 菜单页面]
+  IsSuper -- 否 --> ShowTree[展示三级权限矩阵 PERM_MATRIX\n恢复已勾选 menuPerms/perms]
+  ShowTree --> Edit[勾选/取消\n页面(菜单页面栏) + 按钮]
   Edit --> Save[点击保存权限]
-  Save --> PersistRole[更新角色 menuPerms\n写入 jht_db_org_role]
+  Save --> PersistRole[更新角色 menuPerms + perms\n写入 jht_db_org_role]
   PersistRole --> IsSelf{改的是当前\n登录用户的角色?}
   IsSelf -- 是 --> SyncStore[permission store\n即时更新\n侧边栏立刻变化]
   IsSelf -- 否 --> Done([完成])
@@ -196,15 +214,19 @@ flowchart TD
 
 5. **默认拒绝原则**：角色的 `menuPerms` 未配置或为空数组，用户只能看到 `/dashboard`，其他所有页面被路由守卫拦截。
 
+6. **`perms`（按钮权限）当前仅配置未拦截**：权限矩阵可勾选并持久化按钮级 `perms`，但页面内按钮尚未接入按需隐藏/禁用（登录菜单过滤只依赖 `menuPerms`）。后续如需按钮级管控，可在页面用 `perms.includes('/path:edit')` 控制按钮显隐。这与原项目 `v-permission` 指令对应。
+
+7. **权限矩阵不含「权限点 CRUD / 请求接口 / 请求方式」**：原项目那套属后端权限节点管理，纯前端 mock 下无意义，故权限矩阵只保留「菜单页面 + 按钮」两类勾选。
+
 ## 十、相关源文件索引
 
 | 文件 | 职责 |
 | --- | --- |
 | `src/store/permission.js` | 权限 Pinia Store：加载/缓存/校验 |
 | `src/store/user.js` | 用户 Store：登录后加载权限，角色变更时同步 |
-| `src/api/modules/organizers.js` | 角色数据 + MENU_TREE + 旧数据迁移 |
+| `src/api/modules/organizers.js` | 角色数据 + MENU_TREE + PERM_MATRIX/ALL_MENU_PATHS/ALL_PERM_IDS + 旧数据迁移 |
 | `src/api/modules/auth.js` | 登录 mock：按账号查角色 |
 | `src/router/index.js` | 路由守卫：ensurePerms + hasPerm 拦截 |
 | `src/components/Layout/Sidebar.vue` | 按 hasPerm 过滤渲染菜单 |
-| `src/views/organizers/Role.vue` | 菜单权限配置 UI |
+| `src/views/organizers/Role.vue` | 三级权限矩阵配置 UI（页面 menuPerms + 按钮 perms） |
 | `src/views/organizers/Personnel.vue` | 人员角色分配 + 即时同步 |

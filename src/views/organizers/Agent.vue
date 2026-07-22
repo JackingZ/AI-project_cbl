@@ -1,6 +1,8 @@
 <template>
   <div>
-    <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
+    <MoreInfoPanel v-if="moreVisible" owner-type="agent" :owner="current" @back="moreVisible = false" />
+
+    <SearchBar v-show="!moreVisible" :model="query" @search="handleSearch" @reset="handleReset">
       <el-form-item label="企业名称">
         <el-input v-model="query.name" placeholder="请输入企业名称" clearable style="width: 180px" />
       </el-form-item>
@@ -19,7 +21,7 @@
       </template>
     </SearchBar>
 
-    <PageCard>
+    <PageCard v-show="!moreVisible">
       <ProTable
         v-model:page="query.page"
         v-model:size="query.size"
@@ -42,9 +44,8 @@
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="openRelate(row)">关联人员</el-button>
-          <el-button link type="primary" size="small" @click="openService(row)">开通服务</el-button>
           <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -191,6 +192,7 @@ import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import RelateStaffDialog from '@/components/Common/RelateStaffDialog.vue'
 import EnableServiceDialog from '@/components/Common/EnableServiceDialog.vue'
+import MoreInfoPanel from '@/components/Common/MoreInfoPanel.vue'
 import { confirmDelete } from '@/utils'
 import { required } from '@/utils/validate'
 import {
@@ -214,6 +216,9 @@ const serviceVisible = ref(false)
 const current = ref(null)
 const openRelate = row => { current.value = row; relateVisible.value = true }
 const openService = row => { current.value = row; serviceVisible.value = true }
+// 更多：附加信息子页面
+const moreVisible = ref(false)
+const openMore = row => { current.value = row; moreVisible.value = true }
 
 const columns = [
   { prop: 'name', label: '公司名称', minWidth: 190 },
