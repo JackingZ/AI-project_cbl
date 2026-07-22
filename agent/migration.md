@@ -198,3 +198,32 @@
 ### 演示账号（任意密码）
 - `admin` 超级管理员（全部）｜`user05` 运营主管｜`user02` 客服专员｜`user03` 财务专员｜`user04` 代理商管理员。
 - 注：升级后若浏览器仍存旧 `jht_db_org_role`（无 `menuPerms`），该角色会回退为全放行；如需体验分角色差异，可在角色页重新配置并保存，或清掉该 localStorage 键让种子重建。
+
+## 十、机构管理页面与原项目一致性对齐
+
+对照参考项目 `workProject2-jht/src/views/organizers-management/` 逐页对齐「数据(列/字段)」与「跳转方式」。
+
+### 10.1 跳转方式对齐
+- 新增共享组件 `components/Common/FormDrawer.vue`：右侧抽屉，API 与 `Modal.vue` 一致（drop-in 可替换），对齐原项目 `app-drawer` 交互。
+- `Personnel.vue`、`Department.vue`：新增/编辑由居中弹窗 `Modal` 改为右侧抽屉 `FormDrawer`。
+- 客户/代理商/供应商：原项目本就是 `el-dialog` 弹窗，与现状一致，保持不变。
+
+### 10.2 权限设置重建为权限矩阵（替代第九节的菜单树方案）
+- `Role.vue` 右栏由「`MENU_TREE` 菜单树」改为原项目的「三级权限矩阵」：模块(一级) → 页面(二级，分「菜单页面 / 操作权限」两栏) → 按钮(三级：查看/新增/编辑/删除/导出)，含级联勾选、全选/清空。
+- 数据模型新增 `PERM_MATRIX` / `ALL_MENU_PATHS` / `ALL_PERM_IDS`（由 `MENU_TREE` 派生）。
+- 关键：页面勾选写入 `menuPerms`（**登录菜单过滤逻辑不变**，第九节的 user02 限权仍有效），按钮勾选写入 `perms`；超管仍免配置、恒定 `['*']`。
+
+### 10.3 数据完整对齐（organizers.js + 三页面）
+- 地区扩展为**四级**：国家/州省/城市/**区县**（对齐原项目 countryId/stateId/cityId/countyId），`REGIONS` 加第四层，`regionAt` 产出 county。
+- 客户：表格加「签署合同、关联人员、添加时间」列；表单补齐英文名称、客户编码、合作期限、添加来源、客户来源、公司规模、注册资金、销售类型、平台类型/平台、店铺链接、品牌、驰名商标等。
+- 代理商/供应商：「关联人员、开通服务」改为**表格列**（显示数量，点击打开对应弹窗）；表单补齐合作期限/金额、是否请款/提货、人工审核、独立财务、域名前缀、公司类型等。
+- mock 种子同步扩充全部新字段，并填充 `financeStaff/serviceStaff/services`，令数量列真实可见。
+
+### 10.4 人员跨公司数据 + 缓存版本机制
+- 问题：原 mock 人员全部 `custName:'聚货通总部'`，超管看不到其他公司人员。
+- 修复：人员扩到 30 条并新增 `custType`，跨聚货通/客户/代理商/供应商分布；`Personnel.vue` 加「公司类型 / 所属公司」筛选与「公司类型」列；`getPersonnelList` 支持 custType/custName 过滤，新增 `getCustNameOptions`。
+- `persist.js` 的 `createResource` 新增 `version` 参数：种子版本升级后旧 localStorage 缓存自动作废重建；personnel/customer/agent/supplier 四资源版本升至 `2`。
+
+### 10.5 刻意保留（未完全照搬原项目）
+- **人员单角色**：原项目多角色，但改多角色会破坏已验证的单角色登录/菜单过滤，故保持单角色，仅补齐所属岗位、设置密码、强制改密字段。
+- **权限矩阵不含「权限点 CRUD/请求接口/请求方式」**：原项目那套是后端权限节点管理，纯前端 mock 下无意义，只保留菜单+按钮勾选。
