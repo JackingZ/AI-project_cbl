@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+dist-ssr/
+*.local
+
+# 参考的原始老项目（仅用于迁移比对，不纳入本仓库）
+agent/workProject2-jht/
+
+# macOS 解压残留
+__MACOSX/
+.DS_Store
+
+# 本地个人配置
+.claude/settings.local.json
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 环境变量（如后续接入真实后端）
+.env.local
+.env.*.local
