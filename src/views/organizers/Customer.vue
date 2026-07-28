@@ -27,8 +27,8 @@
         </el-select>
       </el-form-item>
       <template #actions>
-        <el-button type="success" :icon="Plus" @click="openAdd">新增客户</el-button>
-        <el-button :icon="Upload" @click="importVisible = true">批量导入</el-button>
+        <el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增客户</el-button>
+        <el-button :icon="Upload" :disabled="!can('add')" @click="importVisible = true">批量导入</el-button>
       </template>
     </SearchBar>
 
@@ -53,15 +53,15 @@
           <el-tag :type="auditTag(row.audit)" effect="light">{{ row.audit }}</el-tag>
         </template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openView(row)">查看</el-button>
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="openBelong(row)">修改归属</el-button>
-          <el-button v-if="row.audit !== '已通过'" link type="warning" size="small" @click="openAudit(row)">审核</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
-          <el-button link type="primary" size="small" @click="openMore(row)">更多</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openView(row)">查看</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openBelong(row)">修改归属</el-button>
+          <el-button v-if="row.audit !== '已通过'" link type="warning" size="small" :disabled="!can('edit')" @click="openAudit(row)">审核</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -334,7 +334,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { Plus, Upload, Close } from '@element-plus/icons-vue'
-import { useActivatedRefresh } from '@/utils/hooks'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
@@ -354,6 +354,7 @@ import {
 
 defineOptions({ name: 'OrgCustomer' })
 
+const { can } = usePagePerms()
 const countryOptions = REGIONS.map(r => r.value)
 
 const query = reactive({ name: '', subtype: '', country: '', audit: '', status: '', page: 1, size: 10 })

@@ -1,5 +1,7 @@
 import { reactive, ref, onMounted, onActivated } from 'vue'
+import { useRoute } from 'vue-router'
 import { confirmDelete } from './index'
+import { usePermissionStore } from '@/store/permission'
 
 // 列表页数据加载 hook：
 // - 首次进入执行一次（onMounted）
@@ -99,4 +101,15 @@ export function useCrudForm({ api, defaultForm, reload, label = '记录' }) {
     }, `确定删除该${label}吗？`)
 
   return { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove }
+}
+
+// 页面按钮权限 hook：按当前路由 path 拼 `${path}:${action}` 校验角色 perms。
+// 用法：const { can } = usePagePerms()；模板 :disabled="!can('add')"。
+// 超管/未加载全放行，其余严格按已保存 perms（默认拒绝）。basePath 可覆盖路由 path。
+export function usePagePerms(basePath) {
+  const route = useRoute()
+  const permStore = usePermissionStore()
+  const path = basePath || route.path
+  const can = action => permStore.hasBtn(`${path}:${action}`)
+  return { can }
 }

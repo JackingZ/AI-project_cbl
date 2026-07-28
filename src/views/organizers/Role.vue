@@ -4,7 +4,7 @@
     <el-col :span="6">
       <PageCard title="角色列表">
         <template #extra>
-          <el-button link type="primary" :icon="Plus" @click="openAdd">新增角色</el-button>
+          <el-button link type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增角色</el-button>
         </template>
         <el-menu :default-active="String(activeId)" class="role-menu">
           <el-menu-item
@@ -16,8 +16,8 @@
             <span class="role-name">{{ role.name }}</span>
             <el-tag size="small" effect="plain" class="role-tag">{{ role.custType }}</el-tag>
             <span class="role-ops">
-              <el-button link type="primary" size="small" @click.stop="openEdit(role)">编辑</el-button>
-              <el-button link type="danger" size="small" @click.stop="handleDelete(role)">删除</el-button>
+              <el-button link type="primary" size="small" :disabled="!can('edit')" @click.stop="openEdit(role)">编辑</el-button>
+              <el-button link type="danger" size="small" :disabled="!can('del')" @click.stop="handleDelete(role)">删除</el-button>
             </span>
           </el-menu-item>
         </el-menu>
@@ -32,7 +32,7 @@
           <template v-if="activeRole && !isSuperAdmin">
             <el-button link type="primary" size="small" @click="checkAll(true)">全选</el-button>
             <el-button link type="info" size="small" @click="checkAll(false)">清空</el-button>
-            <el-button type="primary" size="small" :loading="saving" @click="savePerms">保存权限</el-button>
+            <el-button type="primary" size="small" :loading="saving" :disabled="!can('edit')" @click="savePerms">保存权限</el-button>
           </template>
         </template>
         <el-empty v-if="!activeRole" description="请选择左侧角色进行权限配置" />
@@ -99,7 +99,7 @@
 <script setup>
 import { reactive, ref, computed } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { useActivatedRefresh } from '@/utils/hooks'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
 import PageCard from '@/components/Common/PageCard.vue'
 import Modal from '@/components/Common/Modal.vue'
 import Empty from '@/components/Common/Empty.vue'
@@ -116,6 +116,7 @@ defineOptions({ name: 'OrgRole' })
 
 const userStore = useUserStore()
 const permStore = usePermissionStore()
+const { can } = usePagePerms()
 
 const roles = ref([])
 const activeRole = ref(null)
@@ -191,8 +192,8 @@ const savePerms = async () => {
     Object.assign(activeRole.value, { menuPerms, perms })
     const local = roles.value.find(r => r.id === activeRole.value.id)
     if (local) Object.assign(local, { menuPerms, perms })
-    // 若改的是当前登录用户的角色，实时刷新侧边栏
-    if (activeRole.value.name === userStore.roleName) permStore.setPerms(menuPerms)
+    // 若改的是当前登录用户的角色，实时刷新侧边栏与按钮权限
+    if (activeRole.value.name === userStore.roleName) permStore.setPerms(menuPerms, undefined, perms)
     ElMessage.success('权限保存成功')
   } finally {
     saving.value = false

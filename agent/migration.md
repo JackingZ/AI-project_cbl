@@ -246,6 +246,14 @@
 - 「修改归属」：小弹窗展示当前所属上级 + 下拉选新公司，`updateCustomer(id, { parentName })` 保存。上级选项 = 聚货通总部 + 全部代理商（新增 `getParentCompanyOptions`）。
 - 「审核」：弹窗只读展示公司名称/国家/主体类型/营业执照，可编辑 公司类型/合作期限/**总分标识**/审核结果(待审核/已通过/已拒绝)/备注，`updateCustomer` 写回；`audit==='已通过'` 时隐藏审核按钮。
 - **证件照片**：三个固定槽位（身份证正面/反面 + 营业执照），`el-upload` 本地选图（不自动上传），`FileReader` 读为 base64 存入客户记录 `certDocs.{front,back,license}`（随 localStorage 持久化），槽位缩略图展示、可删除重传、点击弹框预览；单张 ≤ 1MB。
+
+### 11.4 机构管理按钮权限接入（perms 从"配置"到"生效"）
+- 此前 10.2 的按钮 `perms` 仅可勾选保存、未在页面拦截；本次接入到机构管理 6 页。
+- `store/permission.js`：`state` 增 `btnPerms`；`setPerms/loadByRole` 同步加载角色 `perms`（超管 `['*']`）；持久化 `jht_menu_perms` 增 `btns` 字段；新增 `hasBtn(id)`（未加载/`['*']` 放行，否则命中 `${path}:${action}`）。
+- `utils/hooks.js`：新增 `usePagePerms(basePath?)` → 返回 `can(action)`，按当前路由 path 拼 `${path}:${action}` 调 `hasBtn`。
+- `Role.vue`/`Personnel.vue`/`Department.vue`/`Customer.vue`/`Agent.vue`/`Supplier.vue`：新增/编辑/删除/查看/更多/状态开关/重置密码/修改归属/审核 等按钮加 `:disabled="!can('xxx')"`。动作映射：新增·批量导入→add，查看·更多→view，编辑·状态·修改归属·审核·重置密码→edit，删除→del。
+- 展现策略：**未授权置灰禁用**（非隐藏，对齐原项目 `$checkPermission`）；超管全放行；其余角色默认拒绝，需在权限矩阵勾选保存后生效（`Role.vue` 保存本人角色时 `setPerms` 带上 perms，即时生效）。
+- 其余业务模块（订单/财务等）暂未接入，后续同法用 `usePagePerms` 即可。
 - 客户操作列因增至 6 项，`action-width` 由 260 调至 330。
 
 ### 11.2 “更多”附加信息子页面（对齐原项目 attachInfo.vue）

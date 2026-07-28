@@ -17,7 +17,7 @@
         </el-select>
       </el-form-item>
       <template #actions>
-        <el-button type="success" :icon="Plus" @click="openAdd">新增代理商</el-button>
+        <el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增代理商</el-button>
       </template>
     </SearchBar>
 
@@ -40,12 +40,12 @@
           <el-button link type="primary" size="small" @click="openService(row)">{{ (row.services || []).length }} 项</el-button>
         </template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
-          <el-button link type="primary" size="small" @click="openMore(row)">更多</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -185,7 +185,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { useActivatedRefresh } from '@/utils/hooks'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
@@ -203,6 +203,7 @@ import {
 
 defineOptions({ name: 'OrgAgent' })
 
+const { can } = usePagePerms()
 const countryOptions = REGIONS.map(r => r.value)
 
 const query = reactive({ name: '', country: '', status: '', page: 1, size: 10 })

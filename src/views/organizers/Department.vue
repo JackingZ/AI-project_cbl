@@ -5,7 +5,7 @@
         <el-input v-model="keyword" placeholder="输入名称过滤" clearable style="width: 200px" @input="loadData" />
       </el-form-item>
       <template #actions>
-        <el-button type="success" :icon="Plus" @click="openAdd(0)">新增部门</el-button>
+        <el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd(0)">新增部门</el-button>
       </template>
     </SearchBar>
 
@@ -15,9 +15,9 @@
           <el-icon class="dept-icon"><OfficeBuilding /></el-icon>{{ row.name }}
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openAdd(row.id)">新增下级</el-button>
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('add')" @click="openAdd(row.id)">新增下级</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -59,7 +59,7 @@
 <script setup>
 import { reactive, ref, computed } from 'vue'
 import { Plus, OfficeBuilding } from '@element-plus/icons-vue'
-import { useActivatedRefresh } from '@/utils/hooks'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
@@ -70,6 +70,7 @@ import { getDeptTree, addDept, updateDept, deleteDept } from '@/api/modules/orga
 
 defineOptions({ name: 'OrgDepartment' })
 
+const { can } = usePagePerms()
 const flat = ref([])
 const keyword = ref('')
 const loading = ref(false)

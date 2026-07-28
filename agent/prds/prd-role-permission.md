@@ -101,6 +101,15 @@ ALL_PERM_IDS    // 全部按钮 id（按钮全选用）
 | 任意角色 | — | `/dashboard` 恒可访问 |
 | 权限未加载（守卫竞态） | `null` | 暂不拦截，加载后再判 |
 
+**按钮权限判定**（`hasBtn(id)`，id = `${path}:${action}`）
+
+| 场景 | btnPerms | 结果 |
+| --- | --- | --- |
+| 超级管理员 | `['*']` | 全部按钮可用 |
+| 普通角色配置了按钮 | `['/organizers/customer:edit', ...]` | 命中的按钮可用，其余置灰 |
+| 角色未配置 / 空 | `[]` | 全部按钮置灰（默认拒绝） |
+| 权限未加载 | — | 暂放行（防守卫竞态） |
+
 ## 六、默认角色（演示数据）
 
 | 账号 | 角色 | 可见范围 |
@@ -214,7 +223,7 @@ flowchart TD
 
 5. **默认拒绝原则**：角色的 `menuPerms` 未配置或为空数组，用户只能看到 `/dashboard`，其他所有页面被路由守卫拦截。
 
-6. **`perms`（按钮权限）当前仅配置未拦截**：权限矩阵可勾选并持久化按钮级 `perms`，但页面内按钮尚未接入按需隐藏/禁用（登录菜单过滤只依赖 `menuPerms`）。后续如需按钮级管控，可在页面用 `perms.includes('/path:edit')` 控制按钮显隐。这与原项目 `v-permission` 指令对应。
+6. **`perms`（按钮权限）已在机构管理页接入（置灰）**：`permission store` 随角色加载 `btnPerms` 并持久化，新增 `hasBtn(id)`；`usePagePerms()` hook 按当前路由 path 拼 `${path}:${action}` 校验。机构管理 6 页（权限设置/人员/部门/客户/代理商/供应商）的 新增/编辑/删除/查看/状态 按钮均按 perms **置灰禁用**（未授权不可点，非隐藏）。超管 `btnPerms=['*']` 全放行；其余角色默认拒绝，需在权限矩阵勾选保存后生效。其余业务模块（订单/财务等）尚未接入，后续同样用 `usePagePerms` 即可。
 
 7. **权限矩阵不含「权限点 CRUD / 请求接口 / 请求方式」**：原项目那套属后端权限节点管理，纯前端 mock 下无意义，故权限矩阵只保留「菜单页面 + 按钮」两类勾选。
 
@@ -222,7 +231,8 @@ flowchart TD
 
 | 文件 | 职责 |
 | --- | --- |
-| `src/store/permission.js` | 权限 Pinia Store：加载/缓存/校验 |
+| `src/store/permission.js` | 权限 Pinia Store：加载/缓存/校验（`hasPerm` 页面 + `hasBtn` 按钮） |
+| `src/utils/hooks.js` | `usePagePerms()`：按路由 path 生成 `can(action)` 按钮权限判定 |
 | `src/store/user.js` | 用户 Store：登录后加载权限，角色变更时同步 |
 | `src/api/modules/organizers.js` | 角色数据 + MENU_TREE + PERM_MATRIX/ALL_MENU_PATHS/ALL_PERM_IDS + 旧数据迁移 |
 | `src/api/modules/auth.js` | 登录 mock：按账号查角色 |
