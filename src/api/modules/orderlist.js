@@ -13,10 +13,33 @@ export const ENTRY_STATUS = ['已录单', '未录单']
 export const IO_TYPES = ['进口', '出口']
 export const ASSIGN_TYPES = ['系统指派', '手动指派']
 export const EXPRESS_COMPANIES = ['DHL', 'FedEx', 'UPS', 'USPS']
+export const EXPRESS_TYPES = ['国际快递', '国内快递', '专线小包']
 export const TRAILER_TYPES = ['整柜拖车', '拼柜拖车']
 export const SUPPLIERS = ['环球物流', '速达国际', '安通供应链', '远洋货代']
 export const COUNTRIES = ['美国', '德国', '日本', '英国', '澳大利亚']
 export const PORTS = ['深圳港', '上海港', '宁波港', '洛杉矶港', '汉堡港', '东京港']
+// 派生列所需中文枚举（保留中文串，占位对齐参考）
+export const ORDER_TYPES = ['销售', '采购']
+export const COMPANY_TYPES = ['聚货通', '客户', '代理商', '供应商']
+export const ORDER_SOURCES = ['线上下单', '代客下单', '接口对接']
+export const LOAD_METHODS = ['整柜', '拼柜']
+export const DECLARE_METHODS = ['一般贸易', '买单报关', '双清包税', '免报关']
+export const PICK_METHODS = ['上门提货', '自送到仓', '快递到仓']
+export const DELIVER_METHODS = ['卡车派送', '快递派送', '自提']
+export const IN_STATUS = ['未入库', '部分入库', '已入库']
+export const OUT_STATUS = ['未出库', '部分出库', '已出库']
+export const MEASURE_STATUS = ['待计量', '计量中', '已计量']
+export const INSPECT_STATUS = ['待验货', '已验货']
+export const FILE_STATUS = ['待上传', '待审核', '已通过', '已拒绝']
+export const DECLARE_TYPES = ['进口报关', '出口报关', '转关']
+export const BILL_STATUS = ['未出账', '已出账', '已核销']
+export const SERVICES = ['美国专线', '欧洲专线', '日本专线', '空运特快', '海运普船']
+export const FBA_WAREHOUSES = ['ONT8', 'LAX9', 'JFK8', 'FRA3', 'NRT5']
+export const TOP_AGENTS = ['聚货通总部', '华南一级代理', '华东一级代理']
+export const SERVICE_TERMS = ['CIF', 'FOB', 'EXW', 'DDP', 'DDU']
+export const GOODS_CLAUSES = ['电放', '正本', 'HBL', 'MBL']
+export const SCHEDULE_STATUS = ['待调度', '调度中', '已完成', '已取消']
+export const FLEETS = ['自营车队', '合作车队A', '合作车队B']
 
 // 状态 → el-tag 类型
 export function orderStatusTag(s) {
@@ -90,9 +113,54 @@ const orderResource = createResource('orderlist', () =>
       declareStatus: at(['待报关', '报关中', '已放行'], i),
       inspectionStatus: at(['待报检', '已报检'], i),
       createTime: `2024-${pad((i % 12) + 1)}-${pad((i % 27) + 1)} ${pad((i % 12) + 8)}:30:00`,
-      remark: ''
+      remark: '',
+      // 派生列（全程/仓库/签收/代客共用，保留中文串）
+      orderType: at(ORDER_TYPES, i),
+      companyType: at(COMPANY_TYPES, i),
+      companyName: `${at(COMPANY_TYPES, i)}${pad((i % 8) + 1)}`,
+      serviceName: at(SERVICES, i),
+      serviceProvider: at(SUPPLIERS, i + 1),
+      topAgent: at(TOP_AGENTS, i),
+      fbaWarehouse: at(FBA_WAREHOUSES, i),
+      orderWarehouse: `${at(COUNTRIES, i)}集货仓`,
+      goodsWarehouse: `${at(COUNTRIES, i)}海外仓`,
+      declareMethod: at(DECLARE_METHODS, i),
+      pickMethod: at(PICK_METHODS, i),
+      deliverMethod: at(DELIVER_METHODS, i),
+      ifShip: i % 3 === 0 ? '已发货' : '未发货',
+      inStatus: at(IN_STATUS, i),
+      outStatus: at(OUT_STATUS, i),
+      measureStatus: at(MEASURE_STATUS, i),
+      measureAudit: i % 2 === 0 ? '已审核' : '待审核',
+      inspectStatus: at(INSPECT_STATUS, i),
+      declareType: at(DECLARE_TYPES, i),
+      fileStatus: at(FILE_STATUS, i),
+      countryName: at(COUNTRIES, i),
+      sellerName: `销售${pad((i % 12) + 1)}`,
+      estimateFee: Number((((i * 41) % 5000) + 800).toFixed(2)),
+      payDeadline: `2024-${pad((i % 12) + 1)}-${pad((i % 26) + 2)} 23:59:59`,
+      overdueDays: i % 5 === 0 ? (i % 30) + 1 : 0,
+      billStatus: at(BILL_STATUS, i),
+      serviceTerms: at(SERVICE_TERMS, i),
+      goodsClause: at(GOODS_CLAUSES, i),
+      airNo: businessType === '订舱' && i % 2 === 0 ? `AW${String(900000 + i * 31).slice(0, 6)}` : '',
+      packageType: '箱'
     }
-  })
+  }), 2
+)
+
+/* ============ 调度任务单（卡派派生） ============ */
+const scheduleResource = createResource('schedule-tasks', () =>
+  Array.from({ length: 24 }, (_, i) => ({
+    id: i + 1,
+    taskNo: `DD${pad((i % 12) + 1)}${String(1000 + i).slice(0, 4)}`,
+    fleet: at(FLEETS, i),
+    driverName: `司机${pad((i % 15) + 1)}`,
+    cardId: `粤B${String(10000 + i * 137).slice(0, 5)}`,
+    status: at(SCHEDULE_STATUS, i),
+    orderCount: (i % 6) + 1,
+    createTime: `2024-${pad((i % 12) + 1)}-${pad((i % 27) + 1)} ${pad((i % 12) + 8)}:15:00`
+  })), 1
 )
 
 /* ============ 查询 ============ */
@@ -146,6 +214,17 @@ export function getCustomsOrders(p = {}) {
       (!p.ioType || o.ioType === p.ioType),
     paged(p)
   )
+}
+
+// 调度任务单
+export function getScheduleTasks(p = {}) {
+  return scheduleResource.query(
+    t => kw(t.taskNo, p.keyword) && (!p.status || t.status === p.status),
+    paged(p)
+  )
+}
+export function addScheduleTask(data) {
+  return scheduleResource.add({ status: '待调度', orderCount: 0, ...data })
 }
 
 export function getOrderDetail(id) {

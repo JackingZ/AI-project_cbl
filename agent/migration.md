@@ -117,22 +117,24 @@
 - 删除 `views/order`、`views/logistics`、`views/user` 及对应 `api/modules/{order,logistics,user}.js`。
 - Dashboard 近期订单链接重定向至 orderlist 模块。
 
-### 订单管理 orderlist（9 页 + 录单，第二轮迁移）
-- 数据层：`api/modules/orderlist.js` —— 统一一份订单数据集（5 业务类型：快递/订舱/卡派/拖车/报关 + 全生命周期字段），按业务类型/阶段派生 9 个视图；persist.js 持久化。
-- 页面（均 keepAlive）：
-  - 全程订单 WholeOrder（超集列 + 审核通过/拒绝 + 取消）
-  - 仓库订单 WarehouseOrder（在库/部分出库 + 删除）
-  - 订单签收 OrderSign（签收动作）
-  - 代客下单 SalesmanOrder（列表）+ 录单表单 SalesmanAdd（基础信息 + 可编辑商品明细表，hidden 路由，合计自动汇总）
-  - 报关订单 CustomsOrder（进出口筛选 + 指派供应商）
-  - 卡派订单 CarOrder（派车）
-  - 快递订单 ExpressOrder（快递公司筛选 + 指派供应商）
-  - 订舱订单 BookingOrder（审核 + 指派供应商 + 删除）
-  - 拖车订单 TrailerOrder（派车 + 指派供应商）
+### 订单管理 orderlist（10 页 + 录单，第二轮迁移 + 逐页对齐参考）
+- 数据层：`api/modules/orderlist.js` —— 统一一份订单数据集（5 业务类型：快递/订舱/卡派/拖车/报关 + 全生命周期字段），按业务类型/阶段派生视图；persist.js 持久化（订单集 version=2，含派生列字段）。另建 `schedule-tasks` 资源派生调度任务单。
+- 菜单顺序对齐参考：仓库订单 → 全程订单 → 订单签收 → 代客下单 → 报关订单 → 卡派订单 → 调度任务单 → 快递订单 → 订舱订单 → 拖车订单。
+- 逐页严格对齐参考 workProject2-jht 的**表格列/筛选项/操作按钮**（不多不少），跳转统一改弹窗（录单/调度任务除外，仍走路由）：
+  - 全程订单 WholeOrder（超集列 + 更多筛选抽屉 + 查看/订单审核/更多▾ 16 项深操作演示桩）
+  - 仓库订单 WarehouseOrder（原单号起列 + 查看/删除/账单/流转/生成拆柜/更多▾）
+  - 订单签收 OrderSign（签收视角列 + 查看/签收）
+  - 代客下单 SalesmanOrder（录单状态起列 + 查看/录单跳转）+ 录单表单 SalesmanAdd（hidden 路由）
+  - 报关订单 CustomsOrder（报关单号起列 + 查看/指定供应商/流转报关单/取消）
+  - 卡派订单 CarOrder（原单号起列 + 调度任务跳转 + 查看/分配车辆/司机信息）
+  - **调度任务单 AllocationCat（新增页，任务单号/车队/司机/车牌/状态/订单数 + 新建/查看）**
+  - 快递订单 ExpressOrder（快递单号起列 + 查看/重新提交/撤单/换单/更多▾）
+  - 订舱订单 BookingOrder（原单号起列 + 查看/审核/订单进度/指定供应商/账单/取消/删除）
+  - 拖车订单 TrailerOrder（起运港起列 + 查看/指定供应商/分配车辆/账单/取消）
 - 复用抽象：
-  - `utils/hooks.js` 增 `useListQuery(fetchFn, initialQuery)` —— 统一 query/list/total/loading + 查询/重置/加载 + keepAlive 刷新，消除各列表页样板。
-  - `utils/index.js` 增 `confirmThen` —— 通用二次确认（取消静默返回）。
-  - 全局弹窗：`components/Common/OrderDetailDialog.vue`（详情，按业务类型展示专属字段）、`AssignSupplierDialog.vue`（指派供应商，customs/express/booking/trailer 复用）、`AssignVehicleDialog.vue`（派车，car/trailer 复用）。
+  - `utils/hooks.js` 的 `useListQuery`、`utils/index.js` 的 `confirmThen`；新增 `demoAction(name)` —— 打印/下载/导出等深操作统一提示"演示功能，暂不支持"。
+  - 全局弹窗：`OrderDetailDialog`、`AssignSupplierDialog`、`AssignVehicleDialog`（既有）+ 新增 `AuditDialog`（审核通过/拒绝）、`BillDialog`（账单信息）、`ProgressDialog`（订单进度步骤）、`DriverDialog`（司机信息）、`SwapDialog`（换单）。
+  - 依赖不存在数据的筛选项（订单类型/公司类型/所属公司/FBA仓库/服务/服务条款/放货条款/服务商/一级代理商等）做成静态选项占位，保证筛选项集合与参考一致（baseMatch 仅按关键字/业务类型/状态/审核过滤，其余占位不参与真实过滤）。
 
 ---
 
@@ -142,7 +144,7 @@
 |---|---|---|
 | Dashboard | ✅ 保留 | 沿用新版看板 |
 | 机构管理 organizers | ✅ 完成 | 6 页（含关联人员/开通服务/批量导入） |
-| 订单管理 orderlist | ✅ 完成 | 9 订单视图 + 代客下单录单 |
+| 订单管理 orderlist | ✅ 完成 | 10 订单视图（含调度任务单）+ 代客下单录单，逐页对齐参考 |
 | 运营管理 operation | ✅ 完成 | 24 页基础配置 CRUD |
 | 系统管理 system | ✅ 完成 | 18 页 |
 | 财务管理 financial | ✅ 完成 | 11 页（发票/收付款/信用/风控） |

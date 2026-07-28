@@ -32,3 +32,8 @@ export async function confirmThen(message, handler, { title = '提示', success 
   if (success) ElMessage.success(success)
   return true
 }
+
+// 演示桩：打印/下载/导出等纯前端 mock 无法实现的深操作统一提示
+export function demoAction(name = '该功能') {
+  ElMessage.info(`${name}为演示功能，当前环境暂不支持`)
+}

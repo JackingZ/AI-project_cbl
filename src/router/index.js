@@ -25,17 +25,18 @@ const organizersModule = {
   ]
 }
 
-// 已迁移模块：订单管理 orderlist（9 个订单视图 + 代客下单录单页）
+// 已迁移模块：订单管理 orderlist（10 个订单视图 + 代客下单录单页）
 const orderlistModule = {
   path: 'orderlist', title: '订单管理', icon: Document,
   children: [
-    { path: 'whole-order', title: '全程订单', name: 'OlWhole', keepAlive: true, component: () => import('@/views/orderlist/WholeOrder.vue') },
     { path: 'warehouse-order', title: '仓库订单', name: 'OlWarehouse', keepAlive: true, component: () => import('@/views/orderlist/WarehouseOrder.vue') },
+    { path: 'whole-order', title: '全程订单', name: 'OlWhole', keepAlive: true, component: () => import('@/views/orderlist/WholeOrder.vue') },
     { path: 'order-sign', title: '订单签收', name: 'OlSign', keepAlive: true, component: () => import('@/views/orderlist/OrderSign.vue') },
     { path: 'salesman-order', title: '代客下单', name: 'OlSalesman', keepAlive: true, component: () => import('@/views/orderlist/SalesmanOrder.vue') },
     { path: 'salesman-add', title: '录单', name: 'OlSalesmanAdd', hidden: true, activeMenu: '/orderlist/salesman-order', component: () => import('@/views/orderlist/SalesmanAdd.vue') },
     { path: 'customs-order', title: '报关订单', name: 'OlCustoms', keepAlive: true, component: () => import('@/views/orderlist/CustomsOrder.vue') },
     { path: 'car-order', title: '卡派订单', name: 'OlCar', keepAlive: true, component: () => import('@/views/orderlist/CarOrder.vue') },
+    { path: 'allocation-cat', title: '调度任务单', name: 'OlAllocation', keepAlive: true, component: () => import('@/views/orderlist/AllocationCat.vue') },
     { path: 'express-order', title: '快递订单', name: 'OlExpress', keepAlive: true, component: () => import('@/views/orderlist/ExpressOrder.vue') },
     { path: 'booking-order', title: '订舱订单', name: 'OlBooking', keepAlive: true, component: () => import('@/views/orderlist/BookingOrder.vue') },
     { path: 'trailer-order', title: '拖车订单', name: 'OlTrailer', keepAlive: true, component: () => import('@/views/orderlist/TrailerOrder.vue') }
