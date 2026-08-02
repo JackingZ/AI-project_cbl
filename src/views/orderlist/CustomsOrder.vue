@@ -17,7 +17,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="报关单号/原单号" clearable style="width: 180px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 300px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 110px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="公司类型">
@@ -26,7 +32,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="订单类别">
           <el-select v-model="query.ioType" placeholder="全部" clearable style="width: 110px">
@@ -86,15 +94,22 @@ import { useListQuery } from '@/utils/hooks'
 import { confirmThen, demoAction } from '@/utils'
 import {
   getCustomsOrders, cancelOrder,
-  ORDER_TYPES, ORDER_STATUS, DECLARE_TYPES, COMPANY_TYPES, IO_TYPES, COUNTRIES, orderStatusTag
+  ORDER_TYPES, ORDER_STATUS, DECLARE_TYPES, COMPANY_TYPES, COMPANY_NAMES, IO_TYPES, COUNTRIES, orderStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlCustoms' })
 
+// 关键字搜索字段（前置下拉，对齐源页：订舱单SO/柜号/原单号）
+const KEY_FIELDS = [
+  { label: '订舱单(SO)', value: 'soCode' },
+  { label: '柜号', value: 'containerNo' },
+  { label: '原单号', value: 'code' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getCustomsOrders, {
-    keyword: '', orderType: '', status: '', declareType: '',
+    keyword: '', keyField: 'soCode', orderType: '', status: '', declareType: '',
     companyType: '', companyName: '', ioType: '', countryName: '', dateRange: []
   })
 

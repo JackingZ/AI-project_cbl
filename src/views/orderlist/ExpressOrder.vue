@@ -17,7 +17,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="原单号/快递单号" clearable style="width: 180px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 280px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 100px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="公司类型">
@@ -26,7 +32,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="快递类型">
           <el-select v-model="query.expressType" placeholder="全部" clearable style="width: 120px">
@@ -90,15 +98,21 @@ import { useListQuery } from '@/utils/hooks'
 import { confirmThen, demoAction } from '@/utils'
 import {
   getExpressOrders, cancelOrder,
-  EXPRESS_COMPANIES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, EXPRESS_TYPES, orderStatusTag
+  EXPRESS_COMPANIES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES, EXPRESS_TYPES, orderStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlExpress' })
 
+// 关键字搜索字段（前置下拉，对齐源页：原单号/快递单号）
+const KEY_FIELDS = [
+  { label: '原单号', value: 'code' },
+  { label: '快递单号', value: 'expressNo' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getExpressOrders, {
-    keyword: '', orderType: '', status: '', expressCompany: '',
+    keyword: '', keyField: 'code', orderType: '', status: '', expressCompany: '',
     companyType: '', companyName: '', expressType: '', dateRange: []
   })
 

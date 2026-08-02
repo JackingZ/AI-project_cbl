@@ -26,7 +26,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="起运港">
           <el-select v-model="query.portFrom" placeholder="全部" clearable style="width: 120px">
@@ -92,7 +94,7 @@ import BillDialog from '@/components/Common/BillDialog.vue'
 import { useListQuery } from '@/utils/hooks'
 import { confirmThen } from '@/utils'
 import {
-  getTrailerOrders, cancelOrder, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES,
+  getTrailerOrders, cancelOrder, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, COMPANY_NAMES,
   TRAILER_TYPES, PORTS, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 

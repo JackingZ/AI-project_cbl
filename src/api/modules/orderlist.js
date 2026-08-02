@@ -21,6 +21,11 @@ export const PORTS = ['深圳港', '上海港', '宁波港', '洛杉矶港', '�
 // 派生列所需中文枚举（保留中文串，占位对齐参考）
 export const ORDER_TYPES = ['销售', '采购']
 export const COMPANY_TYPES = ['聚货通', '客户', '代理商', '供应商']
+// 所属公司选项（静态占位，与公司类型一致做下拉，不参与真实过滤）
+export const COMPANY_NAMES = [
+  '聚货通总部', '环球物流贸易', '速达国际电商', '安通供应链',
+  '华东一级代理', '华南二级代理', '远洋货代', '深圳跨境仓储'
+]
 export const ORDER_SOURCES = ['线上下单', '代客下单', '接口对接']
 export const LOAD_METHODS = ['整柜', '拼柜']
 export const DECLARE_METHODS = ['一般贸易', '买单报关', '双清包税', '免报关']
@@ -165,9 +170,16 @@ const scheduleResource = createResource('schedule-tasks', () =>
 
 /* ============ 查询 ============ */
 const kw = (v, q) => !q || String(v ?? '').includes(q)
-// 通用基础过滤：订单号/原单号、业务类型、订单状态、审核状态
+// 关键字过滤：keyField 指定按哪个字段查（前置下拉选中项），未指定时默认查 订单号/原单号；
+// exact=true 时精准匹配（全程订单精准匹配开关），否则模糊包含。
+const matchKeyword = (o, p) => {
+  if (!p.keyword) return true
+  const cmp = (v) => p.exact ? String(v ?? '') === p.keyword : String(v ?? '').includes(p.keyword)
+  return p.keyField ? cmp(o[p.keyField]) : (cmp(o.orderNo) || cmp(o.code))
+}
+// 通用基础过滤：关键字、业务类型、订单状态、审核状态
 const baseMatch = (o, p) =>
-  (kw(o.orderNo, p.keyword) || kw(o.code, p.keyword)) &&
+  matchKeyword(o, p) &&
   (!p.businessType || o.businessType === p.businessType) &&
   (!p.status || o.status === p.status) &&
   (!p.audit || o.audit === p.audit)

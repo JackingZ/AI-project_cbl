@@ -22,7 +22,18 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="订单号/原单号" clearable style="width: 180px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 320px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 110px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+          <template #append>
+            <el-tooltip :content="query.exact ? '精准匹配（已开启）' : '精准匹配（已关闭）'" placement="top">
+              <el-button :type="query.exact ? 'primary' : ''" :icon="Aim" @click="query.exact = !query.exact" />
+            </el-tooltip>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="公司类型">
@@ -31,7 +42,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="目的国家">
           <el-select v-model="query.destinationCountry" placeholder="全部" clearable style="width: 120px">
@@ -118,7 +131,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown, Aim } from '@element-plus/icons-vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
@@ -130,16 +143,23 @@ import { confirmThen, demoAction } from '@/utils'
 import { formatMoney } from '@/utils/format'
 import {
   getWholeOrders, cancelOrder, deleteOrder,
-  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES,
+  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES,
   COUNTRIES, FBA_WAREHOUSES, SERVICES, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlWhole' })
 
+// 关键字搜索字段（前置下拉，对齐源页：原单号/客户名称/快递单号）
+const KEY_FIELDS = [
+  { label: '原单号', value: 'code' },
+  { label: '客户名称', value: 'customerName' },
+  { label: '快递单号', value: 'expressNo' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getWholeOrders, {
-    keyword: '', orderType: '', status: '', audit: '', businessType: '',
+    keyword: '', keyField: 'code', exact: false, orderType: '', status: '', audit: '', businessType: '',
     companyType: '', companyName: '', destinationCountry: '', fbaWarehouse: '', serviceName: '', dateRange: []
   })
 

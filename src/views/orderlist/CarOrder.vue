@@ -26,7 +26,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="业务类型">
           <el-select v-model="query.businessType" placeholder="全部" clearable style="width: 120px">
@@ -88,7 +90,7 @@ import AssignVehicleDialog from '@/components/Common/AssignVehicleDialog.vue'
 import DriverDialog from '@/components/Common/DriverDialog.vue'
 import { useListQuery } from '@/utils/hooks'
 import {
-  getCarOrders, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, BUSINESS_TYPES, COUNTRIES, SERVICES, orderStatusTag
+  getCarOrders, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, COMPANY_NAMES, BUSINESS_TYPES, COUNTRIES, SERVICES, orderStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlCar' })

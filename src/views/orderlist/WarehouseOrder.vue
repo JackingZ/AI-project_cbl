@@ -22,7 +22,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="订单号/原单号" clearable style="width: 180px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 280px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 100px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="公司类型">
@@ -31,7 +37,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="装货方式">
           <el-select v-model="query.loadType" placeholder="全部" clearable style="width: 120px">
@@ -102,15 +110,21 @@ import { useListQuery } from '@/utils/hooks'
 import { confirmDelete, demoAction } from '@/utils'
 import {
   getWarehouseOrders, deleteOrder,
-  BUSINESS_TYPES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, ORDER_SOURCES, LOAD_METHODS, orderStatusTag
+  BUSINESS_TYPES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES, ORDER_SOURCES, LOAD_METHODS, orderStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlWarehouse' })
 
+// 关键字搜索字段（前置下拉，对齐源页：原单号/柜号）
+const KEY_FIELDS = [
+  { label: '原单号', value: 'code' },
+  { label: '柜号', value: 'containerNo' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getWarehouseOrders, {
-    keyword: '', orderType: '', status: '', businessType: '', orderSource: '',
+    keyword: '', keyField: 'code', orderType: '', status: '', businessType: '', orderSource: '',
     companyType: '', companyName: '', loadType: '', orderWarehouse: '', dateRange: []
   })
 

@@ -17,7 +17,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="SO号/原单号" clearable style="width: 180px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 300px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 110px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="公司类型">
@@ -26,7 +32,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="所属公司">
-          <el-input v-model="query.companyName" placeholder="所属公司" clearable style="width: 140px" />
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
+          </el-select>
         </el-form-item>
         <el-form-item label="目的港">
           <el-select v-model="query.portTo" placeholder="全部" clearable style="width: 120px">
@@ -109,16 +117,25 @@ import { useListQuery } from '@/utils/hooks'
 import { confirmDelete, confirmThen } from '@/utils'
 import {
   getBookingOrders, cancelOrder, deleteOrder,
-  ORDER_STATUS, ORDER_TYPES, BUSINESS_TYPES, COMPANY_TYPES, PORTS,
+  ORDER_STATUS, ORDER_TYPES, BUSINESS_TYPES, COMPANY_TYPES, COMPANY_NAMES, PORTS,
   SERVICE_TERMS, GOODS_CLAUSES, SUPPLIERS, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlBooking' })
 
+// 关键字搜索字段（前置下拉，对齐源页：原单号/SO号/柜号/提单号/航空单号）
+const KEY_FIELDS = [
+  { label: '原单号', value: 'code' },
+  { label: 'SO号', value: 'soCode' },
+  { label: '柜号', value: 'containerNo' },
+  { label: '提单号', value: 'billNo' },
+  { label: '航空单号', value: 'airNo' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getBookingOrders, {
-    keyword: '', orderType: '', businessType: '', status: '',
+    keyword: '', keyField: 'code', orderType: '', businessType: '', status: '',
     companyType: '', companyName: '', portTo: '', serviceTerms: '', goodsClause: '', serviceProvider: '', dateRange: []
   })
 

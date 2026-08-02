@@ -261,3 +261,35 @@
 - 新增共享组件 `components/Common/MoreInfoPanel.vue`：**配置化** 6 标签页面板（`ALL_TABS` 定义每页的列与表单字段），点击「更多」在页内切换显示（列表隐藏 + 顶部「返回列表」），每标签页支持新增/编辑/删除，地址页支持「设为默认」。
 - 客户隐藏「收款信息 / 开票信息」两页（`ownerOnly` 标记 + `ownerType==='customer'` 过滤），与原项目一致；供应商/代理商显示全部 6 页。
 - 三页面接入：`openMore(row)` 置当前主体并展开面板；`SearchBar`/`PageCard` 加 `v-show="!moreVisible"`，面板 `@back` 收起。
+
+---
+
+## 十二、订单管理筛选项一致性对齐（el-input 前置下拉 + 业务联动）
+
+对照原项目发现订单 10 页筛选区迁移时有系统性丢失，逐项纠偏。
+
+### 12.1 el-input 前置下拉（搜索字段选择器）还原
+- 问题：原项目 6 个页面（订舱/全程/订单签收/快递/报关/代客）关键字框是 `el-input` + `slot="prepend"` 内嵌"搜索字段下拉"（如订舱：原单号/SO号/柜号/提单号/航空单号），迁移时全部退化成裸 `el-input`，前置下拉丢失。
+- 修复：各页恢复 Element Plus `#prepend` 插槽下拉，`query.keyField` 绑定所选字段，选项对齐原项目：
+  - 订舱 BookingOrder：原单号 code / SO号 soCode / 柜号 containerNo / 提单号 billNo / 航空单号 airNo
+  - 全程 WholeOrder：原单号 code / 客户名称 customerName / 快递单号 expressNo（**额外**恢复 `#append` 精准匹配开关图标 `query.exact`）
+  - 订单签收 OrderSign：原单号 code / 客户名称 customerName / 柜号 containerNo
+  - 快递 ExpressOrder：原单号 code / 快递单号 expressNo
+  - 报关 CustomsOrder：订舱单(SO) soCode / 柜号 containerNo / 原单号 code
+  - 代客 SalesmanOrder：原单号 code（原项目单项，业务编码/备注被注释，照搬单项）
+- car/trailer 原页本就是纯 input（trailer 是 SO号纯框、car 无关键字下拉），保持不变。
+
+### 12.2 关键字真实按所选字段过滤（用户确认）
+- `api/modules/orderlist.js`：`kw` 单字段模糊 → 新增 `matchKeyword(o, p)`：`p.keyField` 指定则按该字段查、否则默认查 orderNo/code；`p.exact` 为真时精准相等（全程订单精准匹配开关），否则模糊包含。`baseMatch` 改用 `matchKeyword`。
+- 各页 `useListQuery` 初值补 `keyField`（默认对齐原页首选项）；全程额外补 `exact: false`。
+
+### 12.3 条件展示：只对齐业务联动，角色条件不迁（用户确认）
+- 原项目大量 `v-if="custType==='0'"` 等**角色驱动**显隐（总部/代理/供应商/客户），新项目是单角色 + `menuPerms` 模型，无 `custType` 上下文 —— 按第五节"依赖不存在数据做占位"原则，**不照搬**这类角色显隐，筛选项本身保留为常显静态占位。
+- **业务字段联动**（如订单状态 `:disabled="!businessType"`、prepend 选项随海运/空运变化）在新项目 mock 缺运输方式细分字段（订舱页固定大类"订舱"），亦按占位处理静态全列。
+- 筛选项顺序对齐原页从左到右，关键字框置于主筛选区末尾；保留新项目 `showMore` 折叠设计承载次要筛选项。
+
+### 12.4 补充：WarehouseOrder 关键字前置下拉 + 所属公司统一改下拉
+- **WarehouseOrder 关键字**：原页 prepend 为下拉（订单号/柜号），迁移时漏做（裸 input）。已恢复前置下拉（原单号 code / 柜号 containerNo），`keyField` 真实过滤。至此 7 个订单页（订舱/全程/订单签收/快递/报关/代客/仓库）关键字前置下拉全部对齐。
+- **所属公司 el-input → el-select**：原各页所属公司为纯文本输入框，与"公司类型"（下拉）不一致。数据层新增 `COMPANY_NAMES` 静态选项（占位对齐，不参与真实过滤）；Booking/Whole/Customs/Express/Trailer/Car/Warehouse 七页所属公司改为 `el-select`（clearable+filterable）。
+- **OrderSign 补所属公司**：原页筛选区缺"所属公司"，按一致性要求补齐下拉（置于公司类型之后）。
+- SalesmanOrder 对应项为"所属客户"（原页即如此），非公司类型/所属公司，保持不变。

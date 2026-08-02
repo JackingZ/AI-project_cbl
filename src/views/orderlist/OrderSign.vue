@@ -17,7 +17,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="原单号/客户名称/柜号" clearable style="width: 190px" />
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 300px">
+          <template #prepend>
+            <el-select v-model="query.keyField" style="width: 110px">
+              <el-option v-for="o in KEY_FIELDS" :key="o.value" :label="o.label" :value="o.value" />
+            </el-select>
+          </template>
+        </el-input>
       </el-form-item>
       <template v-if="showMore">
         <el-form-item label="一级代理商">
@@ -33,6 +39,11 @@
         <el-form-item label="公司类型">
           <el-select v-model="query.companyType" placeholder="全部" clearable style="width: 120px">
             <el-option v-for="t in COMPANY_TYPES" :key="t" :label="t" :value="t" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属公司">
+          <el-select v-model="query.companyName" placeholder="全部" clearable filterable style="width: 140px">
+            <el-option v-for="n in COMPANY_NAMES" :key="n" :label="n" :value="n" />
           </el-select>
         </el-form-item>
         <el-form-item label="目的国家">
@@ -115,17 +126,24 @@ import { confirmThen, demoAction } from '@/utils'
 import { formatMoney } from '@/utils/format'
 import {
   getSignOrders, signOrder,
-  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES,
+  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES,
   COUNTRIES, FBA_WAREHOUSES, SERVICES, TOP_AGENTS, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlSign' })
 
+// 关键字搜索字段（前置下拉，对齐源页：原单号/客户名称/柜号）
+const KEY_FIELDS = [
+  { label: '原单号', value: 'code' },
+  { label: '客户名称', value: 'customerName' },
+  { label: '柜号', value: 'containerNo' }
+]
+
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getSignOrders, {
-    keyword: '', status: '', audit: '', businessType: '', topAgent: '', orderType: '',
-    companyType: '', destinationCountry: '', fbaWarehouse: '', serviceName: '', dateRange: []
+    keyword: '', keyField: 'code', status: '', audit: '', businessType: '', topAgent: '', orderType: '',
+    companyType: '', companyName: '', destinationCountry: '', fbaWarehouse: '', serviceName: '', dateRange: []
   })
 
 const columns = [
