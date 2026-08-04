@@ -14,6 +14,9 @@
         <template #col-name="{ row }">
           <el-icon class="dept-icon"><OfficeBuilding /></el-icon>{{ row.name }}
         </template>
+        <template #col-manager="{ row }">
+          {{ Array.isArray(row.manager) ? row.manager.join('、') : (row.manager || '—') }}
+        </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('add')" @click="openAdd(row.id)">新增下级</el-button>
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
@@ -46,7 +49,17 @@
           <el-input v-model="form.alias" placeholder="English name" />
         </el-form-item>
         <el-form-item label="部门主管" prop="manager">
-          <el-input v-model="form.manager" placeholder="请输入部门主管" />
+          <el-select
+            v-model="form.manager"
+            multiple
+            collapse-tags
+            clearable
+            filterable
+            placeholder="请选择部门主管"
+            style="width: 100%"
+          >
+            <el-option v-for="m in managerOptions" :key="m" :label="m" :value="m" />
+          </el-select>
         </el-form-item>
         <el-form-item label="备注信息" prop="remark">
           <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="选填" />
@@ -66,7 +79,7 @@ import ProTable from '@/components/Table/ProTable.vue'
 import FormDrawer from '@/components/Common/FormDrawer.vue'
 import { confirmDelete } from '@/utils'
 import { required } from '@/utils/validate'
-import { getDeptTree, addDept, updateDept, deleteDept } from '@/api/modules/organizers'
+import { getDeptTree, addDept, updateDept, deleteDept, getStaffOptions } from '@/api/modules/organizers'
 
 defineOptions({ name: 'OrgDepartment' })
 
@@ -74,6 +87,7 @@ const { can } = usePagePerms()
 const flat = ref([])
 const keyword = ref('')
 const loading = ref(false)
+const managerOptions = ref([])
 
 const columns = [
   { prop: 'name', label: '部门名称', minWidth: 260 },
@@ -107,7 +121,7 @@ const rules = {
 
 const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
-const defaultForm = () => ({ parentId: 0, name: '', alias: '', manager: '', remark: '' })
+const defaultForm = () => ({ parentId: 0, name: '', alias: '', manager: [], remark: '' })
 const form = reactive(defaultForm())
 
 const loadData = async () => {
@@ -126,7 +140,9 @@ const openAdd = parentId => {
   formRef.value?.clearValidate()
 }
 const openEdit = row => {
-  Object.assign(form, { parentId: row.parentId, name: row.name, alias: row.alias, manager: row.manager, remark: row.remark })
+  // 兼容旧数据：manager 可能是字符串，规范化为数组供多选绑定
+  const manager = Array.isArray(row.manager) ? [...row.manager] : (row.manager ? [row.manager] : [])
+  Object.assign(form, { parentId: row.parentId, name: row.name, alias: row.alias, manager, remark: row.remark })
   Object.assign(dialog, { visible: true, title: '编辑部门', isEdit: true, id: row.id })
   formRef.value?.clearValidate()
 }
@@ -155,7 +171,12 @@ const handleDelete = row =>
     loadData()
   }, `确定删除部门「${row.name}」及其下级吗？`)
 
-useActivatedRefresh(loadData)
+const loadManagerOptions = async () => {
+  const res = await getStaffOptions()
+  managerOptions.value = [...new Set(res.data.map(s => s.realName))]
+}
+
+useActivatedRefresh(() => { loadManagerOptions(); loadData() })
 </script>
 
 <style scoped lang="scss">

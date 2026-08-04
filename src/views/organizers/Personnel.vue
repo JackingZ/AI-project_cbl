@@ -42,17 +42,22 @@
       >
         <template #col-status="{ row }">
           <el-switch
+            v-if="!isProtected(row)"
             :model-value="row.status"
             active-value="启用"
             inactive-value="禁用"
             :disabled="!can('edit')"
             @change="v => toggleStatus(row, v)"
           />
+          <span v-else>{{ row.status }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="doReset(row)">重置密码</el-button>
-          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          <template v-if="!isProtected(row)">
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="doReset(row)">重置密码</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          </template>
+          <span v-else style="color: var(--el-text-color-placeholder)">—</span>
         </template>
       </ProTable>
     </PageCard>
@@ -128,6 +133,9 @@ defineOptions({ name: 'OrgPersonnel' })
 const userStore = useUserStore()
 const { can } = usePagePerms()
 
+// 行级保护：内置 admin 账号与当前登录本人不可重置密码/编辑/删除/切换状态（对齐源）
+const isProtected = row => row.username === 'admin' || row.username === userStore.userInfo?.username
+
 const query = reactive({ keyword: '', custType: '', custName: '', dept: '', status: '', page: 1, size: 10 })
 const list = ref([])
 const total = ref(0)
@@ -155,7 +163,6 @@ const rules = {
   password: [required('请输入初始密码')],
   phone: [required('请输入手机号'), phoneRule],
   deptName: [required('请选择部门', 'change')],
-  postName: [required('请选择岗位', 'change')],
   roleName: [required('请选择角色', 'change')]
 }
 

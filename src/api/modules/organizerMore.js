@@ -6,11 +6,12 @@ import { mockRequest } from '../mock'
 import { REGIONS } from './organizers'
 
 /* ============ 选项枚举 ============ */
-export const ADDRESS_TYPES = ['发货地址', '收货地址', '退货地址']
-export const SETTING_TYPES = ['报关行', '目的港代理', '海外仓', '拖车行']
-export const COLLECTION_TYPES = ['银行转账', 'PayPal', '西联汇款', '支付宝']
+// 枚举对齐源项目 workProject2-jht
+export const ADDRESS_TYPES = ['办公室', '客服部', '提货仓库', '到货仓库']
+export const SETTING_TYPES = ['发货人', '收货人', '通知人', '进口商', '海外代理', '订舱代理', '报关抬头']
+export const COLLECTION_TYPES = ['银行卡', '微信', '支付宝', 'PayPal', '其它']
 export const CURRENCIES = ['USD 美元', 'EUR 欧元', 'CNY 人民币', 'GBP 英镑', 'JPY 日元']
-export const FILE_TYPES = ['营业执照', '合同', '资质证书', '其他']
+export const FILE_TYPES = ['身份证正面', '身份证反面', '营业执照', 'WCA证书', 'ITAT证书', 'NVOCC证书', '合同', '其他']
 export const VALID_OPTIONS = ['有效', '无效']
 
 const COUNTRIES = REGIONS.map(r => r.value)
@@ -27,10 +28,10 @@ function seed() {
       const base = { ownerType, ownerId }
       const c = COUNTRIES[ownerId % COUNTRIES.length]
       push({ ...base, tab: 'contact', country: c, dept: '业务部', duty: '业务对接', name: `联系人${ownerId}`, tel: `010-8888${ownerId}00`, phone: `139${pad(ownerId)}00000${ownerId}`, email: `contact${ownerId}@demo.com`, sns: `wx_demo${ownerId}`, address: `${c}某街${ownerId}号` })
-      push({ ...base, tab: 'address', isDefault: ownerId === 1, addrType: '发货地址', name: `默认仓${ownerId}`, region: [c], address: `${c}物流园${ownerId}区`, contactName: `联系人${ownerId}` })
+      push({ ...base, tab: 'address', isDefault: ownerId === 1, addrType: '提货仓库', name: `默认仓${ownerId}`, region: [c], address: `${c}物流园${ownerId}区`, contactName: `联系人${ownerId}` })
       push({ ...base, tab: 'file', fileType: '营业执照', name: `营业执照${ownerId}`, code: `LIC${pad(ownerId)}0001`, des: '扫描件' })
       if (ownerType !== 'customer') {
-        push({ ...base, tab: 'collection', collType: '银行转账', country: c, currency: 'USD 美元', acctNo: `62220${ownerId}0000${ownerId}`, swiftCode: `BKCHCNBJ${ownerId}`, remark: '主账户' })
+        push({ ...base, tab: 'collection', collType: '银行卡', country: c, currency: 'USD 美元', acctNo: `62220${ownerId}0000${ownerId}`, swiftCode: `BKCHCNBJ${ownerId}`, remark: '主账户' })
         push({ ...base, tab: 'bill', name: `${c}${ownerId}公司`, taxId: `91${pad(ownerId)}000000000`, bank: '中国银行', country: c, currency: 'CNY 人民币', amount: `${ownerId * 10}万`, remark: '' })
       }
     }
@@ -38,7 +39,7 @@ function seed() {
   return rows
 }
 
-const moreResource = createResource('org_more', seed, 1)
+const moreResource = createResource('org_more', seed, 2)
 
 /* ============ CRUD ============ */
 // 按主体 + 标签页拉取子记录列表（不分页，子表数据量小）

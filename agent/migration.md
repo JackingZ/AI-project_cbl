@@ -327,3 +327,29 @@
 ### 待续
 - 24 页按钮权限统一接入 `usePagePerms().can()`（未授权置灰），对齐机构管理做法。
 - 逐页差异清单存于 `agent/plans/operation-migration/*.md`。
+
+---
+
+## 十四、机构管理 6 页一致性复审与补齐（对齐 workProject2-jht）
+
+按"逐字段一字不差"标准重新审计示范模块机构管理，差异清单存 `agent/plans/organizers-audit/*.md`。区分【真实缺漏】(补)与【刻意简化】(多租户/custType多角色/权限键改can/tree-select→select 保持现状)。
+
+### 审计结论(评分)
+- role 小差异 / personnel 小差异 / department 小差异 / supplier 78 / agent 72 / 更多信息 72 / customer 68。
+
+### 已补真实缺漏
+- **数据层 organizers.js**：客户补 abbr/branch/certType/certNumber/licenseAddress；代理商补 certNumber/licenseAddress/domain/markPrefix/printServer/storeLink/brand/trademark；供应商补 certNumber/licenseAddress。三资源 version→3 触发旧缓存重建。
+- **organizerMore.js**：4 处枚举对齐源——地址类型(办公室/客服部/提货仓库/到货仓库)、设置类型(发货人/收货人/通知人/进口商/海外代理/订舱代理/报关抬头)、收款方式(银行卡/微信/支付宝/PayPal/其它)、文件类型(身份证正反/营业执照/WCA/ITAT/NVOCC/合同/其他)；种子同步 + version→2。
+- **Customer.vue**：主表单补 公司简称abbr(必填)/证件号码/证照地址/总分标识branch；删除按钮加 audit!=='已通过' 守卫；签署合同列改可点击弹窗改状态(仅已通过可点)；审核弹窗补"添加来源"可编辑。
+- **Role.vue**：移除虚构的 公司类型custType/备注remark 表单项(源建角色只填 name)；角色列表 custType 标签展示保留。
+- **Personnel.vue**：补 admin/本人行级保护(重置/编辑/删除/状态开关)；岗位改非必填。
+- **Department.vue**：部门主管 manager 由纯文本改 el-select 多选(取人员列表)。
+- **Agent.vue/Supplier.vue**：补上述新字段进表单+回填+提交；补上级公司只读展示；状态开关加二次确认。
+- **MoreInfoPanel.vue**：联系信息补 英文名/传真/备注；我的设置补 证件类型/证件号码/服务国家/邮编/是否公开；收款补 账户名称/银行名/英文名/银行代码/分行代码/银行地址。
+
+### 未改(记录待议)
+- 合作期限控件语义(源 daterange vs 目标 select)、公司规模(数字 vs 档位下拉)本轮保持现状(改动影响已验证交互，风险高)。
+- 上传控件(证照/文件)因原型无 OSS，沿用 base64/占位。
+- 权限键未逐字复刻(既定 can() 体系)。
+
+npm run build 通过。

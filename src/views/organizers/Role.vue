@@ -84,14 +84,6 @@
       <el-form-item label="角色名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入角色名称" />
       </el-form-item>
-      <el-form-item label="公司类型" prop="custType">
-        <el-select v-model="form.custType" placeholder="请选择" style="width: 100%">
-          <el-option v-for="c in CUST_TYPES" :key="c" :label="c" :value="c" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="备注" prop="remark">
-        <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="选填" />
-      </el-form-item>
     </el-form>
   </Modal>
 </template>
@@ -109,7 +101,7 @@ import { useUserStore } from '@/store/user'
 import { usePermissionStore } from '@/store/permission'
 import {
   getRoleList, addRole, updateRole, deleteRole,
-  PERM_MATRIX, ALL_MENU_PATHS, ALL_PERM_IDS, CUST_TYPES
+  PERM_MATRIX, ALL_MENU_PATHS, ALL_PERM_IDS
 } from '@/api/modules/organizers'
 
 defineOptions({ name: 'OrgRole' })
@@ -203,11 +195,10 @@ const savePerms = async () => {
 /* 角色增删改 */
 const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
-const defaultForm = () => ({ name: '', custType: '聚货通', remark: '' })
+const defaultForm = () => ({ name: '' })
 const form = reactive(defaultForm())
 const rules = {
-  name: [required('请输入角色名称')],
-  custType: [required('请选择公司类型', 'change')]
+  name: [required('请输入角色名称')]
 }
 
 const openAdd = () => {
@@ -216,7 +207,7 @@ const openAdd = () => {
   formRef.value?.clearValidate()
 }
 const openEdit = role => {
-  Object.assign(form, { name: role.name, custType: role.custType, remark: role.remark })
+  Object.assign(form, { name: role.name })
   Object.assign(dialog, { visible: true, title: '编辑角色', isEdit: true, id: role.id })
   formRef.value?.clearValidate()
 }
@@ -226,10 +217,10 @@ const submit = async () => {
   dialog.loading = true
   try {
     if (dialog.isEdit) {
-      await updateRole(dialog.id, { name: form.name, custType: form.custType, remark: form.remark })
+      await updateRole(dialog.id, { name: form.name })
       ElMessage.success('修改成功')
     } else {
-      await addRole({ name: form.name, custType: form.custType, remark: form.remark, perms: [], menuPerms: [] })
+      await addRole({ name: form.name, perms: [], menuPerms: [] })
       ElMessage.success('新增成功')
     }
     dialog.visible = false

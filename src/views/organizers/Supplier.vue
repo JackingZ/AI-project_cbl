@@ -40,7 +40,7 @@
           <el-button link type="primary" size="small" @click="openService(row)">{{ (row.services || []).length }} 项</el-button>
         </template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="row.status === '启用'" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" :before-change="() => beforeStatusChange(row)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
@@ -69,6 +69,11 @@
           <el-col :span="12">
             <el-form-item label="英文名称" prop="alias">
               <el-input v-model="form.alias" placeholder="English name" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="上级公司">
+              <el-input v-model="form.parentName" disabled placeholder="上级公司" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -110,6 +115,16 @@
               <el-select v-model="form.certType" placeholder="请选择" style="width: 100%">
                 <el-option v-for="c in CERT_TYPES" :key="c" :label="c" :value="c" />
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="证件号码" prop="certNumber">
+              <el-input v-model="form.certNumber" maxlength="20" placeholder="请输入证件号码" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="证照地址" prop="licenseAddress">
+              <el-input v-model="form.licenseAddress" maxlength="100" placeholder="请输入证照地址" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -214,7 +229,8 @@ const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
 const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', branch: '总部', subtype: '快递', region: [],
-  legal: '', licenseCode: '', certType: '营业执照', setupDate: '', coopPeriod: '1年',
+  legal: '', licenseCode: '', certType: '营业执照', certNumber: '', licenseAddress: '',
+  setupDate: '', coopPeriod: '1年',
   domainPrefix: '', ifRequestPay: '是', status: '启用', parentName: '聚货通总部'
 })
 const form = reactive(defaultForm())
@@ -242,7 +258,8 @@ const openEdit = row => {
   Object.assign(form, {
     name: row.name, abbr: row.abbr, alias: row.alias, code: row.code, branch: row.branch, subtype: row.subtype,
     region: [row.country, row.state, row.city, row.county].filter(Boolean),
-    legal: row.legal, licenseCode: row.licenseCode, certType: row.certType, setupDate: row.setupDate,
+    legal: row.legal, licenseCode: row.licenseCode, certType: row.certType,
+    certNumber: row.certNumber, licenseAddress: row.licenseAddress, setupDate: row.setupDate,
     coopPeriod: row.coopPeriod, domainPrefix: row.domainPrefix, ifRequestPay: row.ifRequestPay,
     status: row.status, parentName: row.parentName
   })
@@ -255,7 +272,8 @@ const toPayload = () => {
   return {
     name: form.name, abbr: form.abbr, alias: form.alias, code: form.code, branch: form.branch,
     subtype: form.subtype, country, state, city, county, legal: form.legal, licenseCode: form.licenseCode,
-    certType: form.certType, setupDate: form.setupDate, coopPeriod: form.coopPeriod,
+    certType: form.certType, certNumber: form.certNumber, licenseAddress: form.licenseAddress,
+    setupDate: form.setupDate, coopPeriod: form.coopPeriod,
     domainPrefix: form.domainPrefix, ifRequestPay: form.ifRequestPay, status: form.status, parentName: form.parentName
   }
 }
@@ -278,10 +296,18 @@ const submit = async () => {
   }
 }
 
-const toggleStatus = async (row, v) => {
-  await toggleSupplierStatus(row.id, v)
-  row.status = v
-  ElMessage.success(`已${v}`)
+const beforeStatusChange = row => {
+  const next = row.status === '启用' ? '禁用' : '启用'
+  return new Promise((resolve, reject) => {
+    ElMessageBox.confirm(`此操作将${next}该供应商，是否继续？`, '温馨提示', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
+    }).then(async () => {
+      await toggleSupplierStatus(row.id, next)
+      row.status = next
+      ElMessage.success(`已${next}`)
+      resolve(true)
+    }).catch(() => reject(new Error('cancel')))
+  })
 }
 
 const handleDelete = row =>

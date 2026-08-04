@@ -353,6 +353,7 @@ const customerResource = createResource('org_customer', () =>
     return {
       id: i + 1,
       name: `${pick(COUNTRIES, i)}${pad(i + 1)}贸易有限公司`,
+      abbr: `${pick(COUNTRIES, i)}${pad(i + 1)}贸易`,
       alias: `Trade${pad(i + 1)} Co.,Ltd`,
       code: `CUS${pad(i + 1)}${String(1000 + i)}`,
       subtype: pick(CUSTOMER_SUBTYPES, i),
@@ -361,13 +362,16 @@ const customerResource = createResource('org_customer', () =>
       contact: `联系人${pad(i + 1)}`,
       phone: `139${String(20000000 + i * 211).slice(0, 8)}`,
       parentName: i % 3 === 0 ? '聚货通总部' : `${pick(COUNTRIES, i + 1)}一级代理`,
+      branch: pick(SUPPLIER_BRANCH, i),
+      certType: pick(CERT_TYPES, i),
+      certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 137).slice(0, 15)}`,
+      licenseAddress: `${r.country}${r.city}${pick(['中心路', '商务大厦', '产业园'], i)}${i + 1}号`,
       contract: pick(CONTRACT_STATUS, i),
       coopPeriod: pick(COOP_PERIODS, i),
       addSource: pick(ADD_SOURCES, i),
       custSource: pick(CUSTOMER_SOURCES, i),
       legal: `法人${pad(i + 1)}`,
       licenseCode: `9144${String(1000000000 + i * 6301).slice(0, 10)}`,
-      certType: pick(CERT_TYPES, i),
       setupDate: `20${pad(15 + (i % 8))}-${pad((i % 12) + 1)}-15`,
       companySize: pick(COMPANY_SIZES, i),
       registeredCapital: `${(i + 1) * 50}万`,
@@ -384,7 +388,7 @@ const customerResource = createResource('org_customer', () =>
       createTime: seedTime(i)
     }
   }),
-  2
+  3
 )
 
 /* ============ 代理商管理 ============ */
@@ -401,8 +405,16 @@ const agentResource = createResource('org_agent', () =>
       legal: `法人${pad(i + 1)}`,
       licenseCode: `9144${String(1000000000 + i * 7919).slice(0, 10)}`,
       certType: pick(CERT_TYPES, i),
+      certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 211).slice(0, 15)}`,
+      licenseAddress: `${r.country}${r.city}${pick(['物流园', '货运中心', '保税区'], i)}${i + 1}号`,
       setupDate: `20${pad(15 + (i % 8))}-${pad((i % 12) + 1)}-15`,
       parentName: '聚货通总部',
+      domain: `agent${pad(i + 1)}`,
+      markPrefix: `MK${pad(i + 1)}`,
+      printServer: `http://print${pad(i + 1)}.jht.com`,
+      storeLink: `https://agent${pad(i + 1)}.example.com`,
+      brand: `AgentBrand${pad(i + 1)}`,
+      trademark: pick(YES_NO, i),
       coopPeriod: pick(COOP_PERIODS, i),
       coopAmount: `${(i + 1) * 10}万`,
       companySize: pick(COMPANY_SIZES, i),
@@ -423,7 +435,7 @@ const agentResource = createResource('org_agent', () =>
       createTime: seedTime(i)
     }
   }),
-  2
+  3
 )
 
 /* ============ 供应商管理 ============ */
@@ -442,6 +454,8 @@ const supplierResource = createResource('org_supplier', () =>
       legal: `法人${pad(i + 1)}`,
       licenseCode: `9133${String(2000000000 + i * 5333).slice(0, 10)}`,
       certType: pick(CERT_TYPES, i),
+      certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 331).slice(0, 15)}`,
+      licenseAddress: `${r.country}${r.city}${pick(['供应链园区', '仓储中心', '产业基地'], i)}${i + 1}号`,
       setupDate: `20${pad(14 + (i % 9))}-${pad((i % 12) + 1)}-20`,
       parentName: '聚货通总部',
       coopPeriod: pick(COOP_PERIODS, i),
@@ -455,7 +469,7 @@ const supplierResource = createResource('org_supplier', () =>
       createTime: seedTime(i)
     }
   }),
-  2
+  3
 )
 
 /* ============ 通用查询构造 ============ */

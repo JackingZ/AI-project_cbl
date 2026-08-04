@@ -40,7 +40,7 @@
           <el-button link type="primary" size="small" @click="openService(row)">{{ (row.services || []).length }} 项</el-button>
         </template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="row.status === '启用'" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" :before-change="() => beforeStatusChange(row)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
@@ -72,6 +72,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="上级公司">
+              <el-input v-model="form.parentName" disabled placeholder="上级公司" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="客户编码" prop="code">
               <el-input v-model="form.code" placeholder="请输入客户编码" />
             </el-form-item>
@@ -96,6 +101,16 @@
               <el-select v-model="form.certType" placeholder="请选择" style="width: 100%">
                 <el-option v-for="c in CERT_TYPES" :key="c" :label="c" :value="c" />
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="证件号码" prop="certNumber">
+              <el-input v-model="form.certNumber" maxlength="20" placeholder="请输入证件号码" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="证照地址" prop="licenseAddress">
+              <el-input v-model="form.licenseAddress" maxlength="100" placeholder="请输入证照地址" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -138,6 +153,38 @@
             <el-form-item label="平台" prop="platform">
               <el-select v-model="form.platform" placeholder="请选择" style="width: 100%">
                 <el-option v-for="p in PLATFORMS" :key="p" :label="p" :value="p" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="域名前缀" prop="domain">
+              <el-input v-model="form.domain" maxlength="8" show-word-limit placeholder="请输入域名前缀" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="唛头前缀" prop="markPrefix">
+              <el-input v-model="form.markPrefix" maxlength="4" show-word-limit placeholder="请输入唛头前缀" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="打印服务器路径" prop="printServer">
+              <el-input v-model="form.printServer" maxlength="100" placeholder="请输入打印服务器路径" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="店铺链接" prop="storeLink">
+              <el-input v-model="form.storeLink" maxlength="50" placeholder="请输入店铺链接" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand">
+              <el-input v-model="form.brand" maxlength="50" placeholder="请输入品牌" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="驰名商标" prop="trademark">
+              <el-select v-model="form.trademark" placeholder="请选择" style="width: 100%">
+                <el-option v-for="y in YES_NO" :key="y" :label="y" :value="y" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -246,8 +293,10 @@ const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
 const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', region: [], legal: '', licenseCode: '',
-  certType: '营业执照', setupDate: '', coopPeriod: '1年', coopAmount: '', companySize: '1-20人',
-  registeredCapital: '', saleType: '直销', platform: '独立站', ifRequestPay: '是', ifPickup: '否',
+  certType: '营业执照', certNumber: '', licenseAddress: '', setupDate: '', coopPeriod: '1年',
+  coopAmount: '', companySize: '1-20人', registeredCapital: '', saleType: '直销', platform: '独立站',
+  domain: '', markPrefix: '', printServer: '', storeLink: '', brand: '', trademark: '否',
+  ifRequestPay: '是', ifPickup: '否',
   ifManualReview: '否', ifSelfFinance: '否', status: '启用', parentName: '聚货通总部'
 })
 const form = reactive(defaultForm())
@@ -275,9 +324,12 @@ const openEdit = row => {
   Object.assign(form, {
     name: row.name, abbr: row.abbr, alias: row.alias, code: row.code,
     region: [row.country, row.state, row.city, row.county].filter(Boolean),
-    legal: row.legal, licenseCode: row.licenseCode, certType: row.certType, setupDate: row.setupDate,
+    legal: row.legal, licenseCode: row.licenseCode, certType: row.certType,
+    certNumber: row.certNumber, licenseAddress: row.licenseAddress, setupDate: row.setupDate,
     coopPeriod: row.coopPeriod, coopAmount: row.coopAmount, companySize: row.companySize,
     registeredCapital: row.registeredCapital, saleType: row.saleType, platform: row.platform,
+    domain: row.domain, markPrefix: row.markPrefix, printServer: row.printServer,
+    storeLink: row.storeLink, brand: row.brand, trademark: row.trademark,
     ifRequestPay: row.ifRequestPay, ifPickup: row.ifPickup, ifManualReview: row.ifManualReview,
     ifSelfFinance: row.ifSelfFinance, status: row.status, parentName: row.parentName
   })
@@ -290,9 +342,13 @@ const toPayload = () => {
   return {
     name: form.name, abbr: form.abbr, alias: form.alias, code: form.code,
     country, state, city, county, legal: form.legal, licenseCode: form.licenseCode,
-    certType: form.certType, setupDate: form.setupDate, coopPeriod: form.coopPeriod,
+    certType: form.certType, certNumber: form.certNumber, licenseAddress: form.licenseAddress,
+    setupDate: form.setupDate, coopPeriod: form.coopPeriod,
     coopAmount: form.coopAmount, companySize: form.companySize, registeredCapital: form.registeredCapital,
-    saleType: form.saleType, platform: form.platform, ifRequestPay: form.ifRequestPay,
+    saleType: form.saleType, platform: form.platform,
+    domain: form.domain, markPrefix: form.markPrefix, printServer: form.printServer,
+    storeLink: form.storeLink, brand: form.brand, trademark: form.trademark,
+    ifRequestPay: form.ifRequestPay,
     ifPickup: form.ifPickup, ifManualReview: form.ifManualReview, ifSelfFinance: form.ifSelfFinance,
     status: form.status, parentName: form.parentName
   }
@@ -316,10 +372,18 @@ const submit = async () => {
   }
 }
 
-const toggleStatus = async (row, v) => {
-  await toggleAgentStatus(row.id, v)
-  row.status = v
-  ElMessage.success(`已${v}`)
+const beforeStatusChange = row => {
+  const next = row.status === '启用' ? '禁用' : '启用'
+  return new Promise((resolve, reject) => {
+    ElMessageBox.confirm(`此操作将${next}该代理商，是否继续？`, '温馨提示', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
+    }).then(async () => {
+      await toggleAgentStatus(row.id, next)
+      row.status = next
+      ElMessage.success(`已${next}`)
+      resolve(true)
+    }).catch(() => reject(new Error('cancel')))
+  })
 }
 
 const handleDelete = row =>

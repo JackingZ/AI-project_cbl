@@ -43,6 +43,10 @@
         :action-width="330"
         @change="loadData"
       >
+        <template #col-contract="{ row }">
+          <el-button v-if="row.audit === '已通过'" link :type="contractTag(row.contract)" size="small" @click="openContract(row)">{{ row.contract }}</el-button>
+          <span v-else>{{ row.contract }}</span>
+        </template>
         <template #col-region="{ row }">{{ [row.state, row.city, row.county].filter(Boolean).join(' / ') }}</template>
         <template #col-staff="{ row }">
           <el-button link type="primary" size="small" @click="openRelate(row)">
@@ -60,7 +64,7 @@
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openBelong(row)">修改归属</el-button>
           <el-button v-if="row.audit !== '已通过'" link type="warning" size="small" :disabled="!can('edit')" @click="openAudit(row)">审核</el-button>
-          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          <el-button v-if="row.audit !== '已通过'" link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
           <el-button link type="primary" size="small" :disabled="!can('view')" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
@@ -88,6 +92,17 @@
       </el-form>
     </Modal>
 
+    <!-- 修改合同状态 -->
+    <Modal v-model="contract.visible" title="修改合同状态" width="420px" :confirm-loading="contract.loading" @confirm="submitContract">
+      <el-form label-width="90px">
+        <el-form-item label="签署合同">
+          <el-select v-model="contract.value" placeholder="请选择" style="width: 100%">
+            <el-option v-for="c in CONTRACT_STATUS" :key="c" :label="c" :value="c" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </Modal>
+
     <!-- 审核：客户审核结果 -->
     <Modal v-model="audit.visible" title="客户审核" width="720px" :confirm-loading="audit.loading" @confirm="submitAudit">
       <el-form ref="auditFormRef" :model="auditForm" :rules="auditRules" label-width="100px">
@@ -107,6 +122,13 @@
             <el-form-item label="合作期限" prop="coopPeriod">
               <el-select v-model="auditForm.coopPeriod" placeholder="请选择" style="width: 100%">
                 <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="添加来源" prop="source">
+              <el-select v-model="auditForm.source" placeholder="请选择" style="width: 100%">
+                <el-option v-for="s in ADD_SOURCES" :key="s" :label="s" :value="s" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -170,6 +192,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="公司简称" prop="abbr">
+              <el-input v-model="form.abbr" placeholder="请输入公司简称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="英文名称" prop="alias">
               <el-input v-model="form.alias" placeholder="English name" />
             </el-form-item>
@@ -190,6 +217,13 @@
             <el-form-item label="主体类型" prop="entity">
               <el-select v-model="form.entity" placeholder="请选择" style="width: 100%">
                 <el-option v-for="e in ENTITY_TYPES" :key="e" :label="e" :value="e" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="总分标识" prop="branch">
+              <el-select v-model="form.branch" placeholder="请选择" style="width: 100%">
+                <el-option v-for="b in SUPPLIER_BRANCH" :key="b" :label="b" :value="b" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -249,8 +283,18 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="证件号码" prop="certNumber">
+              <el-input v-model="form.certNumber" placeholder="请输入证件号码" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="营业执照" prop="licenseCode">
               <el-input v-model="form.licenseCode" placeholder="请输入营业执照号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="证照地址" prop="licenseAddress">
+              <el-input v-model="form.licenseAddress" placeholder="请输入证照地址" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -394,10 +438,26 @@ const submitBelong = async () => {
   }
 }
 
+// 修改合同状态（仅已通过审核可改，对齐源）
+const contract = reactive({ visible: false, loading: false, id: null, value: '' })
+const contractTag = c => ({ 未签署: 'info', 已签署: 'success', 已注销: 'danger' }[c] || 'primary')
+const openContract = row => { Object.assign(contract, { visible: true, id: row.id, value: row.contract }) }
+const submitContract = async () => {
+  contract.loading = true
+  try {
+    await updateCustomer(contract.id, { contract: contract.value })
+    ElMessage.success('修改成功')
+    contract.visible = false
+    loadData()
+  } finally {
+    contract.loading = false
+  }
+}
+
 // 审核：客户审核结果
 const auditFormRef = ref(null)
 const audit = reactive({ visible: false, loading: false, id: null })
-const auditForm = reactive({ name: '', country: '', entity: '', licenseCode: '', subtype: '', coopPeriod: '', branch: '总部', audit: '待审核', remark: '' })
+const auditForm = reactive({ name: '', country: '', entity: '', licenseCode: '', subtype: '', coopPeriod: '', source: '手工录入', branch: '总部', audit: '待审核', remark: '' })
 const auditRules = {
   subtype: [required('请选择公司类型', 'change')],
   coopPeriod: [required('请选择合作期限', 'change')],
@@ -425,7 +485,7 @@ const previewCert = url => { certPreview.url = url; certPreview.visible = true }
 const openAudit = row => {
   Object.assign(auditForm, {
     name: row.name, country: row.country, entity: row.entity, licenseCode: row.licenseCode,
-    subtype: row.subtype, coopPeriod: row.coopPeriod, branch: row.branch || '总部',
+    subtype: row.subtype, coopPeriod: row.coopPeriod, source: row.addSource || '手工录入', branch: row.branch || '总部',
     audit: row.audit, remark: row.remark || ''
   })
   const docs = row.certDocs || {}
@@ -438,7 +498,7 @@ const submitAudit = async () => {
   audit.loading = true
   try {
     await updateCustomer(audit.id, {
-      subtype: auditForm.subtype, coopPeriod: auditForm.coopPeriod, branch: auditForm.branch,
+      subtype: auditForm.subtype, coopPeriod: auditForm.coopPeriod, addSource: auditForm.source, branch: auditForm.branch,
       audit: auditForm.audit, remark: auditForm.remark,
       certDocs: { front: certDocs.front, back: certDocs.back, license: certDocs.license }
     })
@@ -479,6 +539,7 @@ const auditTag = a => ({ 待审核: 'warning', 已通过: 'success', 已拒绝: 
 
 const rules = {
   name: [required('请输入公司名称')],
+  abbr: [required('请输入公司简称')],
   subtype: [required('请选择客户类型', 'change')],
   entity: [required('请选择主体类型', 'change')],
   region: [required('请选择所在地区', 'change')]
@@ -487,9 +548,9 @@ const rules = {
 const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, readonly: false, id: null })
 const defaultForm = () => ({
-  name: '', alias: '', code: '', subtype: '直客', entity: '企业', region: [],
+  name: '', abbr: '', alias: '', code: '', subtype: '直客', entity: '企业', branch: '总部', region: [],
   contact: '', phone: '', contract: '未签署', coopPeriod: '1年', addSource: '手工录入',
-  custSource: '业务开发', legal: '', certType: '营业执照', licenseCode: '', setupDate: '',
+  custSource: '业务开发', legal: '', certType: '营业执照', certNumber: '', licenseCode: '', licenseAddress: '', setupDate: '',
   companySize: '1-20人', registeredCapital: '', saleType: '直销', platformType: '线下',
   platform: '独立站', shopUrl: '', brand: '', famousMark: '否',
   audit: '待审核', status: '启用', parentName: '聚货通总部'
@@ -511,11 +572,11 @@ const handleSearch = () => { query.page = 1; loadData() }
 const handleReset = () => { Object.assign(query, { name: '', subtype: '', country: '', audit: '', status: '', page: 1 }); loadData() }
 
 const fillForm = row => Object.assign(form, {
-  name: row.name, alias: row.alias, code: row.code, subtype: row.subtype, entity: row.entity,
+  name: row.name, abbr: row.abbr, alias: row.alias, code: row.code, subtype: row.subtype, entity: row.entity, branch: row.branch || '总部',
   region: [row.country, row.state, row.city, row.county].filter(Boolean),
   contact: row.contact, phone: row.phone, contract: row.contract, coopPeriod: row.coopPeriod,
   addSource: row.addSource, custSource: row.custSource, legal: row.legal, certType: row.certType,
-  licenseCode: row.licenseCode, setupDate: row.setupDate, companySize: row.companySize,
+  certNumber: row.certNumber, licenseCode: row.licenseCode, licenseAddress: row.licenseAddress, setupDate: row.setupDate, companySize: row.companySize,
   registeredCapital: row.registeredCapital, saleType: row.saleType, platformType: row.platformType,
   platform: row.platform, shopUrl: row.shopUrl, brand: row.brand, famousMark: row.famousMark,
   audit: row.audit, status: row.status, parentName: row.parentName
@@ -539,10 +600,10 @@ const openView = row => {
 const toPayload = () => {
   const [country, state, city, county] = form.region
   return {
-    name: form.name, alias: form.alias, code: form.code, subtype: form.subtype, entity: form.entity,
+    name: form.name, abbr: form.abbr, alias: form.alias, code: form.code, subtype: form.subtype, entity: form.entity, branch: form.branch,
     country, state, city, county, contact: form.contact, phone: form.phone, contract: form.contract,
     coopPeriod: form.coopPeriod, addSource: form.addSource, custSource: form.custSource,
-    legal: form.legal, certType: form.certType, licenseCode: form.licenseCode, setupDate: form.setupDate,
+    legal: form.legal, certType: form.certType, certNumber: form.certNumber, licenseCode: form.licenseCode, licenseAddress: form.licenseAddress, setupDate: form.setupDate,
     companySize: form.companySize, registeredCapital: form.registeredCapital, saleType: form.saleType,
     platformType: form.platformType, platform: form.platform, shopUrl: form.shopUrl, brand: form.brand,
     famousMark: form.famousMark, audit: form.audit, status: form.status, parentName: form.parentName
