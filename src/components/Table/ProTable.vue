@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, nextTick, onActivated } from 'vue'
 import Empty from '@/components/Common/Empty.vue'
 
 // 通用表格：配置化列 + 内置分页 + 批量选择 + loading，所有列表页统一复用
@@ -90,6 +90,14 @@ const emit = defineEmits(['update:page', 'update:size', 'change', 'selection-cha
 
 const tableRef = ref(null)
 const selection = ref([])
+
+// 数据变化后重新计算列宽：避免表格在容器宽度未就绪时(异步数据/keep-alive/过渡)列宽塌缩为 0
+watch(() => props.data, () => {
+  nextTick(() => tableRef.value?.doLayout?.())
+})
+onActivated(() => {
+  nextTick(() => tableRef.value?.doLayout?.())
+})
 
 const onSelectionChange = rows => {
   selection.value = rows

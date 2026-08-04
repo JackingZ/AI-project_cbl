@@ -6,8 +6,8 @@ export const inc = (v, q) => !q || String(v ?? '').includes(q)
 
 // key: 存储键；seedFn: 种子数据；searchKeys: 参与过滤的字段。
 // 约定：字段名以 '~' 结尾（或名为 name）走模糊匹配，其余走精确匹配。
-export function defineMock(key, seedFn, searchKeys = []) {
-  const r = createResource(key, seedFn)
+export function defineMock(key, seedFn, searchKeys = [], version = 1) {
+  const r = createResource(key, seedFn, version)
   const match = (o, p) =>
     searchKeys.every(raw => {
       const like = raw === 'name' || raw.endsWith('~')

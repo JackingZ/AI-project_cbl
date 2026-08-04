@@ -9,6 +9,31 @@ export function required(message, trigger = 'blur') {
   return { required: true, message, trigger }
 }
 
+// 禁止中文校验规则（英文名称/编码等）：message 自定义
+export function noChineseRule(message = '不能包含中文', trigger = 'blur') {
+  return {
+    validator: (rule, value, cb) => {
+      if (value && /[一-龥]/.test(value)) return cb(new Error(message))
+      cb()
+    },
+    trigger
+  }
+}
+
+// 仅字母（可指定长度）校验规则
+export function letterRule(message = '只能包含字母', { length, trigger = 'blur' } = {}) {
+  return {
+    validator: (rule, value, cb) => {
+      if (value) {
+        if (!/^[a-zA-Z]*$/.test(value)) return cb(new Error(message))
+        if (length && value.length !== length) return cb(new Error(`长度必须为${length}位`))
+      }
+      cb()
+    },
+    trigger
+  }
+}
+
 // 手机号校验规则
 export const phoneRule = {
   validator: (rule, value, cb) => {
