@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增记录</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增记录</el-button>
       </div>
       <ProTable
         v-model:page="query.page"
@@ -15,11 +15,11 @@
         @change="loadData"
       >
         <template #col-records="{ row }">
-          <el-button link type="primary" size="small" @click="openRecords(row)">汇率记录</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openRecords(row)">汇率记录</el-button>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -54,7 +54,7 @@
         </el-form-item>
         <el-form-item>
           <el-button @click="resetRecordForm">清 空</el-button>
-          <el-button type="primary" @click="saveRecord">{{ recordForm.id ? '保 存' : '新 增' }}</el-button>
+          <el-button type="primary" :disabled="!(recordForm.id ? can('edit') : can('add'))" @click="saveRecord">{{ recordForm.id ? '保 存' : '新 增' }}</el-button>
         </el-form-item>
       </el-form>
       <el-table v-loading="recordsLoading" :data="recordList" height="450" border style="width: 100%; margin: 10px 0">
@@ -62,8 +62,8 @@
         <el-table-column label="汇率" prop="rate" />
         <el-table-column label="操作" fixed="right" width="180">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="editRecord(scope.row)">编辑</el-button>
-            <el-button link type="danger" size="small" @click="removeRecord(scope.row)">删除</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="editRecord(scope.row)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="removeRecord(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -77,12 +77,13 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import { rateApi, exRateApi, currencyApi } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpRate' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData } = useListQuery(rateApi.list, {})
 
 const columns = [

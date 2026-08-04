@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增服务大类</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增服务大类</el-button>
         <div class="op-filters">
           <el-select v-model="query.type" placeholder="公司类型" clearable style="width: 200px">
             <el-option label="供应商" value="3" />
@@ -29,10 +29,10 @@
         <template #col-agent="{ row }">{{ row.agent ? '√' : '--' }}</template>
         <template #col-customer="{ row }">{{ row.customer ? '√' : '--' }}</template>
         <template #col-subtype="{ row }">
-          <el-button link type="primary" size="small" @click="openSubType(row)">服务类型</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openSubType(row)">服务类型</el-button>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -58,7 +58,7 @@
 
     <!-- 服务类型子弹窗 -->
     <el-dialog v-model="subDialog.visible" :title="`服务类型【${subDialog.typeName}】`" width="600px" :close-on-click-modal="false">
-      <el-button type="primary" link :icon="Plus" @click="openSubForm()">新增服务类型</el-button>
+      <el-button type="primary" link :icon="Plus" :disabled="!can('add')" @click="openSubForm()">新增服务类型</el-button>
       <el-table :data="subList" height="450" border style="width: 100%; margin: 10px 0">
         <el-table-column prop="name" label="服务类型" />
         <el-table-column label="逾期计费" width="100">
@@ -69,7 +69,7 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="100">
           <template #default="s">
-            <el-button link type="primary" size="small" @click="editSub(s.row)">编辑</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="editSub(s.row)">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -108,11 +108,12 @@ import { Plus, CirclePlus, Remove } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { generaApi, subtypeApi } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpGenera' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(generaApi.list, { type: '', name: '' })
 
 const columns = [

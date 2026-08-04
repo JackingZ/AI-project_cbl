@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增港口</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增港口</el-button>
         <div class="op-filters">
           <el-select v-model="query.type" placeholder="港口类型" clearable filterable style="width: 130px">
             <el-option v-for="t in PORT_TYPE_OPTIONS" :key="t.value" :label="t.label" :value="t.value" />
@@ -44,8 +44,8 @@
           <span v-if="row.countyName"> &gt; {{ row.countyName }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -108,7 +108,7 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import {
@@ -120,6 +120,7 @@ defineOptions({ name: 'OpPort' })
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(portApi.list, {
   type: '', countryName: '', stateName: '', cityName: '', keyword: '', selectType: '1'
 })
+const { can } = usePagePerms()
 
 const columns = [
   { prop: 'type', label: '港口类型', width: 120 },

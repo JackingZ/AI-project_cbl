@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增货币</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增货币</el-button>
       </div>
       <ProTable
         v-model:page="query.page"
@@ -18,8 +18,8 @@
           {{ (row.countries || []).map(c => c.countryName).join('、') || '—' }}
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -66,13 +66,14 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule, letterRule } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import { currencyApi, COUNTRY_OPTIONS } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpCurrency' })
 const { query, list, total, loading, loadData } = useListQuery(currencyApi.list, {})
+const { can } = usePagePerms()
 
 const columns = [
   { prop: 'name', label: '中文名称', minWidth: 120 },

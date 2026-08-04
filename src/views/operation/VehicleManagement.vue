@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增车型</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增车型</el-button>
         <div class="op-filters">
           <el-select v-model="query.countryId" placeholder="国家/地区" filterable clearable style="width: 130px">
             <el-option v-for="c in COUNTRY_OPTIONS" :key="c.id" :label="`${c.name}-${c.alias}`" :value="c.id" />
@@ -28,8 +28,8 @@
         <template #col-volume="{ row }">{{ withUnit(row.volume, row.umVolume, VOLUME_UNITS) }}</template>
         <template #col-loadLimit="{ row }">{{ withUnit(row.loadLimit, row.umWeight, WEIGHT_UNITS) }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -101,7 +101,7 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import {
@@ -110,6 +110,7 @@ import {
 
 defineOptions({ name: 'OpVehicle' })
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(vehicleApi.list, { name: '', countryId: '' })
+const { can } = usePagePerms()
 
 const columns = [
   { prop: 'countries', label: '国家/地区', minWidth: 200 },

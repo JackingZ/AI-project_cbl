@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增FBA仓库</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增FBA仓库</el-button>
         <div class="op-filters">
           <el-select v-model="query.type" placeholder="仓库类型" clearable style="width: 130px">
             <el-option v-for="t in FBA_TYPE_OPTIONS" :key="t.value" :label="t.label" :value="t.value" />
@@ -43,12 +43,13 @@
           <el-switch
             :model-value="row.status === '1'"
             active-text="启用" inactive-text="禁用"
+            :disabled="!can('edit')"
             :before-change="() => beforeStatusChange(row)"
           />
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -135,7 +136,7 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import {
@@ -144,6 +145,7 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpFba' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(fbaApi.list, {
   type: '', countryName: '', stateName: '', cityName: '', status: '', code: ''
 })

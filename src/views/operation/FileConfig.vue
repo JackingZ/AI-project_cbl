@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增文件</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增文件</el-button>
         <div class="op-filters">
           <el-select v-model="query.moduleCode" placeholder="所属模块" clearable filterable style="width: 130px" @change="onSearchModule">
             <el-option v-for="m in FILE_MODULES" :key="m.id" :label="m.moduleName" :value="m.id" />
@@ -33,8 +33,8 @@
         <template #col-ifNeed="{ row }">{{ row.ifNeed === 0 ? '否' : '是' }}</template>
         <template #col-ifAudit="{ row }">{{ row.ifAudit === 0 ? '否' : '是' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -89,7 +89,7 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import {
@@ -97,6 +97,7 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpFile' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(fileApi.list, {
   moduleCode: '', typeCode: '', countryCode: '', fileName: ''
 })

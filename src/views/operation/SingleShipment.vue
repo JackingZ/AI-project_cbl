@@ -4,7 +4,7 @@
     <template v-if="!formView.show">
       <PageCard>
         <div class="op-toolbar">
-          <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button>
           <div class="op-filters">
             <el-select v-model="query.type" placeholder="业务类型" filterable clearable style="width: 110px">
               <el-option v-for="t in SHIP_BIZ_TYPES" :key="t.id" :label="t.name" :value="t.id" />
@@ -67,10 +67,10 @@
           <template #col-dispatch="{ row }">{{ dispatchLabel(row.dispatch) }}</template>
           <template #col-fbastore="{ row }">{{ row.fbastore?.value }}</template>
           <template #actions="{ row }">
-            <el-button link type="primary" size="small" @click="openView(row)">查看</el-button>
-            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('view')" @click="openView(row)">查看</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
             <el-dropdown trigger="click" @command="cmd => demoAction(cmd)">
-              <el-button link type="primary" size="small">导出<el-icon><ArrowDown /></el-icon></el-button>
+              <el-button link type="primary" size="small" :disabled="!can('export')">导出<el-icon><ArrowDown /></el-icon></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item v-for="m in EXPORT_ITEMS" :key="m" :command="m">{{ m }}</el-dropdown-item>
@@ -78,7 +78,7 @@
               </template>
             </el-dropdown>
             <el-dropdown trigger="click" @command="cmd => demoAction(cmd)">
-              <el-button link type="primary" size="small">更多<el-icon><ArrowDown /></el-icon></el-button>
+              <el-button link type="primary" size="small" :disabled="!can('edit')">更多<el-icon><ArrowDown /></el-icon></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item v-for="m in MORE_ITEMS" :key="m" :command="m">{{ m }}</el-dropdown-item>
@@ -178,7 +178,7 @@ import { ref, reactive } from 'vue'
 import { Plus, ArrowDown } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { demoAction } from '@/utils'
 import {
   singleApi, getDeliveryOrders,
@@ -186,6 +186,7 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpSingle' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(singleApi.list, {
   type: '', originCountryId: '', targetCountryId: '', orderTime: [], code: '', codeType: '1',
   ifWareHouseOut: '', ifOutDeclare: '', ifEnterDeclare: '', ifOutTrailer: '', ifEnterTrailer: '', ifOutCar: '', ifEnterCar: '', openTank: ''

@@ -6,7 +6,7 @@
           <template #prepend>报表名称</template>
         </el-input>
       </el-form-item>
-      <template #actions><el-button type="primary" :icon="Plus" @click="openAdd">新增报表</el-button></template>
+      <template #actions><el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增报表</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable
@@ -20,7 +20,7 @@
         @change="loadData"
       >
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -47,11 +47,12 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { reportApi } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpReport' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(reportApi.list, { name: '' })
 
 const columns = [

@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增禁忌词语</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增禁忌词语</el-button>
       </div>
       <ProTable
         v-model:page="query.page"
@@ -15,12 +15,12 @@
         @change="loadData"
       >
         <template #col-country="{ row }">
-          <el-button link type="primary" size="small" @click="openCountry(row)">关联国家</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openCountry(row)">关联国家</el-button>
         </template>
         <template #col-degree="{ row }">{{ row.degree === '0' ? '禁止运输' : '需提供证书' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -58,12 +58,13 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import { tabooApi, COUNTRY_OPTIONS } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpTaboo' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData } = useListQuery(tabooApi.list, {})
 
 const columns = [

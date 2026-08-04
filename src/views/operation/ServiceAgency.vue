@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增机构</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增机构</el-button>
         <div class="op-filters">
           <el-select v-model="query.type" placeholder="机构类型" clearable style="width: 120px">
             <el-option v-for="t in AGENCY_TYPE_OPTIONS" :key="t.value" :label="t.label" :value="t.value" />
@@ -35,7 +35,7 @@
       >
         <template #col-type="{ row }">{{ typeLabel(row.type) }}</template>
         <template #col-serviceCountry="{ row }">
-          <el-button link type="primary" size="small" @click="openCountry(row)">服务国家</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openCountry(row)">服务国家</el-button>
         </template>
         <template #col-region="{ row }">
           <span v-if="row.stateName">{{ row.stateName }}</span>
@@ -45,8 +45,8 @@
           <a :href="row.url" target="_blank" style="color: var(--el-color-primary)">点击访问</a>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -124,7 +124,7 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import {
@@ -132,6 +132,7 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpAgency' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(agencyApi.list, {
   type: '', serviceCountry: '', countryName: '', stateName: '', cityName: '', name: ''
 })

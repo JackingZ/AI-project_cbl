@@ -26,16 +26,16 @@
       <PageCard>
         <div class="op-toolbar">
           <div>
-            <el-button type="primary" :icon="Plus" :disabled="!canAdd" @click="openAdd">新增</el-button>
-            <el-button :disabled="!canAdd" @click="openBatch">批量新增</el-button>
+            <el-button type="primary" :icon="Plus" :disabled="!canAdd || !can('add')" @click="openAdd">新增</el-button>
+            <el-button :disabled="!canAdd || !can('add')" @click="openBatch">批量新增</el-button>
           </div>
           <el-input v-model="search" clearable size="default" placeholder="地区代码/地区名称/地区简称/英文名称" style="width: 280px" @input="loadChildren" />
         </div>
         <div class="area-tip">{{ currentNode ? `当前：${currentNode.name}（下级）` : '点击左侧的行政区域节点' }}</div>
         <ProTable :data="list" :columns="columns" :loading="loading" :total="0" :action-width="150" @change="() => {}">
           <template #actions="{ row }">
-            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
           </template>
         </ProTable>
       </PageCard>
@@ -98,11 +98,14 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
+import { usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import { areaApi } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpArea' })
+
+const { can } = usePagePerms()
 
 // ===== 树 =====
 const treeRef = ref(null)

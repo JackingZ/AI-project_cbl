@@ -5,7 +5,7 @@
     </el-tabs>
 
     <div class="op-toolbar">
-      <el-button type="primary" :icon="Plus" @click="openAdd">新增{{ curTab.label }}</el-button>
+      <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增{{ curTab.label }}</el-button>
       <div class="op-filters">
         <el-input v-model="query.name" clearable placeholder="区域名称" style="width: 200px" />
         <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -24,8 +24,8 @@
     >
       <template #col-relation="{ row }">{{ relationText(row) }}</template>
       <template #actions="{ row }">
-        <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-        <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+        <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+        <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
       </template>
     </ProTable>
 
@@ -70,7 +70,7 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useActivatedRefresh } from '@/utils/hooks'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import {
@@ -79,6 +79,8 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpDomesticArea' })
+
+const { can } = usePagePerms()
 
 // 4 tab 配置：关联对象/列/穿梭选项各异
 const baseCols = key => [

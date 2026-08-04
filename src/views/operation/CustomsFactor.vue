@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button>
         <div class="op-filters">
           <el-select v-model="query.countryId" placeholder="国家" clearable filterable style="width: 130px">
             <el-option v-for="c in COUNTRY_OPTIONS" :key="c.id" :label="`${c.name}-${c.alias}`" :value="c.id" />
@@ -38,7 +38,7 @@
           <div class="item-word">{{ row.enName || '--' }}</div>
         </template>
         <template #col-customCode="{ row }">
-          <el-button link type="primary" size="small" @click="openCode(row)">海关编码</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openCode(row)">海关编码</el-button>
         </template>
         <template #col-meterial="{ row }">
           <div class="item-word">{{ row.cnMeterial || '--' }}</div>
@@ -52,12 +52,13 @@
           <el-switch
             :model-value="row.deleted === 0"
             active-text="启用" inactive-text="禁用"
+            :disabled="!can('edit')"
             :before-change="() => beforeStatusChange(row)"
           />
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="openCopy(row)">复制</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openCopy(row)">复制</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -119,11 +120,12 @@ import { Plus, CirclePlus, Remove } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { factorApi, COUNTRY_OPTIONS } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpFactor' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(factorApi.list, {
   countryId: '', enabled: '', keyword: '', keyType: '1'
 })

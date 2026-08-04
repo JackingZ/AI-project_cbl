@@ -23,13 +23,13 @@
         @change="loadData"
       >
         <template #col-serviceName="{ row }">
-          <el-button link type="primary" size="small" @click="openServiceName(row)">服务名称</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openServiceName(row)">服务名称</el-button>
         </template>
         <template #col-serviceProject="{ row }">
-          <el-button link type="primary" size="small" @click="openAdded(row)">服务项目</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openAdded(row)">服务项目</el-button>
         </template>
         <template #col-additionalService="{ row }">
-          <el-button link type="primary" size="small" @click="openAdditional(row)">附加服务</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openAdditional(row)">附加服务</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -47,7 +47,7 @@
 
     <!-- 服务项目关联弹窗 -->
     <el-dialog v-model="addedDialog.visible" title="服务项目" width="960px" :close-on-click-modal="false">
-      <el-button type="primary" link :icon="Plus" @click="openItemForm('added')">新增服务项目</el-button>
+      <el-button type="primary" link :icon="Plus" :disabled="!can('add')" @click="openItemForm('added')">新增服务项目</el-button>
       <el-table :data="addedList" height="450" border style="width: 100%; margin: 10px 0">
         <el-table-column prop="itemName" label="服务项目" />
         <el-table-column label="是否上传附件" width="140">
@@ -61,8 +61,8 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="120">
           <template #default="s">
-            <el-button link type="primary" size="small" @click="editItem('added', s.$index)">编辑</el-button>
-            <el-button link type="danger" size="small" @click="removeItem('added', s.$index)">删除</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="editItem('added', s.$index)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="removeItem('added', s.$index)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -70,7 +70,7 @@
 
     <!-- 附加服务关联弹窗（无服务标识列） -->
     <el-dialog v-model="additionalDialog.visible" title="附加服务" width="960px" :close-on-click-modal="false">
-      <el-button type="primary" link :icon="Plus" @click="openItemForm('additional')">新增附加服务</el-button>
+      <el-button type="primary" link :icon="Plus" :disabled="!can('add')" @click="openItemForm('additional')">新增附加服务</el-button>
       <el-table :data="additionalList" height="450" border style="width: 100%; margin: 10px 0">
         <el-table-column prop="itemName" label="附加服务" />
         <el-table-column label="是否上传附件" width="140">
@@ -81,8 +81,8 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="120">
           <template #default="s">
-            <el-button link type="primary" size="small" @click="editItem('additional', s.$index)">编辑</el-button>
-            <el-button link type="danger" size="small" @click="removeItem('additional', s.$index)">删除</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="editItem('additional', s.$index)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="removeItem('additional', s.$index)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -125,13 +125,14 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import {
   orderTypeApi, SERVICE_TYPES, PLO_SERVICE_NAMES, PLO_SERVICE_ITEMS, PLO_ADDITIONAL_ITEMS
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpOrderType' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(orderTypeApi.list, { serviceTypeId: '', name: '' })
 
 const columns = [

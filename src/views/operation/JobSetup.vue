@@ -11,7 +11,7 @@
           <template #prepend>岗位名称</template>
         </el-input>
       </el-form-item>
-      <template #actions><el-button type="primary" :icon="Plus" @click="openAdd">新增岗位</el-button></template>
+      <template #actions><el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增岗位</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable
@@ -27,7 +27,7 @@
         <template #col-postType="{ row }">{{ postLabel(row.postType) }}</template>
         <template #col-type="{ row }">{{ typeLabels(row.type) }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -64,11 +64,12 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { jobApi, ORG_TYPE_OPTIONS, POST_TYPES, SERVICE_TYPES } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpJob' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(jobApi.list, { name: '', type: '' })
 
 const columns = [

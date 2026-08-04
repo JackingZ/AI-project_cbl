@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button>
         <div class="op-filters">
           <el-input v-model="query.name" placeholder="规格名称" style="width: 180px" />
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -21,8 +21,8 @@
         <template #col-umLength="{ row }">{{ unitLabel(row.umLength, LENGTH_UNITS) }}</template>
         <template #col-umWeight="{ row }">{{ unitLabel(row.umWeight, WEIGHT_UNITS) }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -71,13 +71,14 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import { plateApi, LENGTH_UNITS, WEIGHT_UNITS, LENGTH_TO_VOLUME } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpPlate' })
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(plateApi.list, { name: '' })
+const { can } = usePagePerms()
 
 const columns = [
   { prop: 'name', label: '规格名称', minWidth: 140 },

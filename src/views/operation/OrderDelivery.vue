@@ -4,7 +4,7 @@
     <template v-if="!formView.show">
       <PageCard>
         <div class="op-toolbar">
-          <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button>
           <div class="op-filters">
             <el-select v-model="query.transport" placeholder="业务类型" filterable style="width: 110px" @change="onSearchType">
               <el-option v-for="t in SHIP_BIZ_TYPES" :key="t.id" :label="t.name" :value="t.id" />
@@ -53,8 +53,8 @@
           <template #col-ifOrder="{ row }">{{ row.ifOrder === 1 ? '是' : '否' }}</template>
           <template #col-status="{ row }">{{ statusLabel(row.status) }}</template>
           <template #actions="{ row }">
-            <el-button link type="primary" size="small" @click="openView(row)">查看</el-button>
-            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('view')" @click="openView(row)">查看</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
           </template>
         </ProTable>
       </PageCard>
@@ -147,13 +147,14 @@ import { ref, reactive } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import {
   deliveryApi, getDeliveryOrders,
   SHIP_BIZ_TYPES, DELIVERY_STATUS, TRAILER_SUPPLIERS, COUNTRY_OPTIONS
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpDelivery' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(deliveryApi.list, {
   transport: '0', countryName: '', ifOrder: '', status: '', orderTime: [], code: '', codeType: '1'
 })

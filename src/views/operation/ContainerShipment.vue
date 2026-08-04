@@ -4,7 +4,7 @@
     <template v-if="!formView.show">
       <PageCard>
         <div class="op-toolbar">
-          <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button>
           <div class="op-filters">
             <el-select v-model="query.type" placeholder="业务类型" filterable clearable style="width: 130px">
               <el-option v-for="t in SHIP_BIZ_TYPES" :key="t.id" :label="t.name" :value="t.id" />
@@ -45,8 +45,8 @@
           <template #col-dispatch="{ row }">{{ dispatchLabel(row.dispatch) }}</template>
           <template #col-fbastore="{ row }">{{ row.fbastore?.value }}</template>
           <template #actions="{ row }">
-            <el-button link type="primary" size="small" @click="openView(row)">查看</el-button>
-            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('view')" @click="openView(row)">查看</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
           </template>
         </ProTable>
       </PageCard>
@@ -126,13 +126,14 @@ import { ref, reactive } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import {
   cshipApi, getShipByCode,
   SHIP_BIZ_TYPES, SHIP_TRANS_TYPES, SHIP_DISPATCH, SHIP_PLANS, TRAILER_SUPPLIERS
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpCship' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(cshipApi.list, { type: '', orderTime: [] })
 
 const columns = [

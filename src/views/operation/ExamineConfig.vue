@@ -2,7 +2,7 @@
   <div>
     <PageCard>
       <div class="op-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增配置</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增配置</el-button>
         <div class="op-filters">
           <el-select v-model="query.type" placeholder="验货方式" clearable filterable style="width: 130px">
             <el-option v-for="t in EXAMINE_TYPE" :key="t.value" :label="t.label" :value="t.value" />
@@ -26,8 +26,8 @@
         <template #col-pick="{ row }">{{ row.pick === '0' ? '随机' : '指定' }}</template>
         <template #col-size="{ row }">{{ row.size ? '是' : '否' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -130,7 +130,7 @@ import { Plus } from '@element-plus/icons-vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { confirmThen } from '@/utils'
 import {
@@ -138,6 +138,7 @@ import {
 } from '@/api/modules/operation'
 
 defineOptions({ name: 'OpExamine' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch } = useListQuery(examineApi.list, { name: '', type: '' })
 
 const columns = [
