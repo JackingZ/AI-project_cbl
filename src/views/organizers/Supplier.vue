@@ -134,9 +134,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="合作期限" prop="coopPeriod">
-              <el-select v-model="form.coopPeriod" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-date-picker v-model="form.coopPeriod" type="daterange" unlink-panels range-separator="~" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -230,7 +228,7 @@ const dialog = reactive({ visible: false, title: '', loading: false, isEdit: fal
 const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', branch: '总部', subtype: '快递', region: [],
   legal: '', licenseCode: '', certType: '营业执照', certNumber: '', licenseAddress: '',
-  setupDate: '', coopPeriod: '1年',
+  setupDate: '', coopPeriod: [],
   domainPrefix: '', ifRequestPay: '是', status: '启用', parentName: '聚货通总部'
 })
 const form = reactive(defaultForm())
@@ -260,7 +258,7 @@ const openEdit = row => {
     region: [row.country, row.state, row.city, row.county].filter(Boolean),
     legal: row.legal, licenseCode: row.licenseCode, certType: row.certType,
     certNumber: row.certNumber, licenseAddress: row.licenseAddress, setupDate: row.setupDate,
-    coopPeriod: row.coopPeriod, domainPrefix: row.domainPrefix, ifRequestPay: row.ifRequestPay,
+    coopPeriod: Array.isArray(row.coopPeriod) ? row.coopPeriod : [], domainPrefix: row.domainPrefix, ifRequestPay: row.ifRequestPay,
     status: row.status, parentName: row.parentName
   })
   Object.assign(dialog, { visible: true, title: '编辑供应商', isEdit: true, id: row.id })

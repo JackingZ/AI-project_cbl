@@ -120,9 +120,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="合作期限" prop="coopPeriod">
-              <el-select v-model="form.coopPeriod" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-date-picker v-model="form.coopPeriod" type="daterange" unlink-panels range-separator="~" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -132,9 +130,9 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="公司规模" prop="companySize">
-              <el-select v-model="form.companySize" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COMPANY_SIZES" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-input v-model="form.companySize" placeholder="请输入" clearable :maxlength="100" @blur="onCompanySizeBlur">
+                <template #append>人</template>
+              </el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -251,6 +249,8 @@ import {
 defineOptions({ name: 'OrgAgent' })
 
 const { can } = usePagePerms()
+// 公司规模仅数字（对齐源）
+const onCompanySizeBlur = () => { if (form.companySize && !/^\d+$/.test(form.companySize)) form.companySize = '' }
 const countryOptions = REGIONS.map(r => r.value)
 
 const query = reactive({ name: '', country: '', status: '', page: 1, size: 10 })
@@ -293,8 +293,8 @@ const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
 const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', region: [], legal: '', licenseCode: '',
-  certType: '营业执照', certNumber: '', licenseAddress: '', setupDate: '', coopPeriod: '1年',
-  coopAmount: '', companySize: '1-20人', registeredCapital: '', saleType: '直销', platform: '独立站',
+  certType: '营业执照', certNumber: '', licenseAddress: '', setupDate: '', coopPeriod: [],
+  coopAmount: '', companySize: '', registeredCapital: '', saleType: '直销', platform: '独立站',
   domain: '', markPrefix: '', printServer: '', storeLink: '', brand: '', trademark: '否',
   ifRequestPay: '是', ifPickup: '否',
   ifManualReview: '否', ifSelfFinance: '否', status: '启用', parentName: '聚货通总部'
@@ -326,7 +326,7 @@ const openEdit = row => {
     region: [row.country, row.state, row.city, row.county].filter(Boolean),
     legal: row.legal, licenseCode: row.licenseCode, certType: row.certType,
     certNumber: row.certNumber, licenseAddress: row.licenseAddress, setupDate: row.setupDate,
-    coopPeriod: row.coopPeriod, coopAmount: row.coopAmount, companySize: row.companySize,
+    coopPeriod: Array.isArray(row.coopPeriod) ? row.coopPeriod : [], coopAmount: row.coopAmount, companySize: row.companySize,
     registeredCapital: row.registeredCapital, saleType: row.saleType, platform: row.platform,
     domain: row.domain, markPrefix: row.markPrefix, printServer: row.printServer,
     storeLink: row.storeLink, brand: row.brand, trademark: row.trademark,

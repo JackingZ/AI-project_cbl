@@ -120,9 +120,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="合作期限" prop="coopPeriod">
-              <el-select v-model="auditForm.coopPeriod" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-date-picker v-model="auditForm.coopPeriod" type="daterange" unlink-panels range-separator="~" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -251,9 +249,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="合作期限" prop="coopPeriod">
-              <el-select v-model="form.coopPeriod" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COOP_PERIODS" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-date-picker v-model="form.coopPeriod" type="daterange" unlink-panels range-separator="~" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -304,9 +300,9 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="公司规模" prop="companySize">
-              <el-select v-model="form.companySize" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in COMPANY_SIZES" :key="c" :label="c" :value="c" />
-              </el-select>
+              <el-input v-model="form.companySize" placeholder="请输入" clearable :maxlength="100" @blur="onCompanySizeBlur">
+                <template #append>人</template>
+              </el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -457,7 +453,9 @@ const submitContract = async () => {
 // 审核：客户审核结果
 const auditFormRef = ref(null)
 const audit = reactive({ visible: false, loading: false, id: null })
-const auditForm = reactive({ name: '', country: '', entity: '', licenseCode: '', subtype: '', coopPeriod: '', source: '手工录入', branch: '总部', audit: '待审核', remark: '' })
+const auditForm = reactive({ name: '', country: '', entity: '', licenseCode: '', subtype: '', coopPeriod: [], source: '手工录入', branch: '总部', audit: '待审核', remark: '' })
+// 公司规模仅数字（对齐源 companySizeBlur）
+const onCompanySizeBlur = () => { if (form.companySize && !/^\d+$/.test(form.companySize)) form.companySize = '' }
 const auditRules = {
   subtype: [required('请选择公司类型', 'change')],
   coopPeriod: [required('请选择合作期限', 'change')],
@@ -485,7 +483,7 @@ const previewCert = url => { certPreview.url = url; certPreview.visible = true }
 const openAudit = row => {
   Object.assign(auditForm, {
     name: row.name, country: row.country, entity: row.entity, licenseCode: row.licenseCode,
-    subtype: row.subtype, coopPeriod: row.coopPeriod, source: row.addSource || '手工录入', branch: row.branch || '总部',
+    subtype: row.subtype, coopPeriod: Array.isArray(row.coopPeriod) ? row.coopPeriod : [], source: row.addSource || '手工录入', branch: row.branch || '总部',
     audit: row.audit, remark: row.remark || ''
   })
   const docs = row.certDocs || {}
@@ -549,9 +547,9 @@ const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, readonly: false, id: null })
 const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', subtype: '直客', entity: '企业', branch: '总部', region: [],
-  contact: '', phone: '', contract: '未签署', coopPeriod: '1年', addSource: '手工录入',
+  contact: '', phone: '', contract: '未签署', coopPeriod: [], addSource: '手工录入',
   custSource: '业务开发', legal: '', certType: '营业执照', certNumber: '', licenseCode: '', licenseAddress: '', setupDate: '',
-  companySize: '1-20人', registeredCapital: '', saleType: '直销', platformType: '线下',
+  companySize: '', registeredCapital: '', saleType: '直销', platformType: '线下',
   platform: '独立站', shopUrl: '', brand: '', famousMark: '否',
   audit: '待审核', status: '启用', parentName: '聚货通总部'
 })
@@ -574,7 +572,7 @@ const handleReset = () => { Object.assign(query, { name: '', subtype: '', countr
 const fillForm = row => Object.assign(form, {
   name: row.name, abbr: row.abbr, alias: row.alias, code: row.code, subtype: row.subtype, entity: row.entity, branch: row.branch || '总部',
   region: [row.country, row.state, row.city, row.county].filter(Boolean),
-  contact: row.contact, phone: row.phone, contract: row.contract, coopPeriod: row.coopPeriod,
+  contact: row.contact, phone: row.phone, contract: row.contract, coopPeriod: Array.isArray(row.coopPeriod) ? row.coopPeriod : [],
   addSource: row.addSource, custSource: row.custSource, legal: row.legal, certType: row.certType,
   certNumber: row.certNumber, licenseCode: row.licenseCode, licenseAddress: row.licenseAddress, setupDate: row.setupDate, companySize: row.companySize,
   registeredCapital: row.registeredCapital, saleType: row.saleType, platformType: row.platformType,

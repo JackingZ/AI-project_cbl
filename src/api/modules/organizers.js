@@ -367,13 +367,13 @@ const customerResource = createResource('org_customer', () =>
       certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 137).slice(0, 15)}`,
       licenseAddress: `${r.country}${r.city}${pick(['中心路', '商务大厦', '产业园'], i)}${i + 1}号`,
       contract: pick(CONTRACT_STATUS, i),
-      coopPeriod: pick(COOP_PERIODS, i),
+      coopPeriod: [`2024-${pad((i % 12) + 1)}-01`, `20${26 + (i % 3)}-${pad((i % 12) + 1)}-01`],
       addSource: pick(ADD_SOURCES, i),
       custSource: pick(CUSTOMER_SOURCES, i),
       legal: `法人${pad(i + 1)}`,
       licenseCode: `9144${String(1000000000 + i * 6301).slice(0, 10)}`,
       setupDate: `20${pad(15 + (i % 8))}-${pad((i % 12) + 1)}-15`,
-      companySize: pick(COMPANY_SIZES, i),
+      companySize: `${(i % 5 + 1) * 30}`,
       registeredCapital: `${(i + 1) * 50}万`,
       saleType: pick(SALE_TYPES, i),
       platformType: pick(PLATFORM_TYPES, i),
@@ -388,7 +388,7 @@ const customerResource = createResource('org_customer', () =>
       createTime: seedTime(i)
     }
   }),
-  3
+  4
 )
 
 /* ============ 代理商管理 ============ */
@@ -415,9 +415,9 @@ const agentResource = createResource('org_agent', () =>
       storeLink: `https://agent${pad(i + 1)}.example.com`,
       brand: `AgentBrand${pad(i + 1)}`,
       trademark: pick(YES_NO, i),
-      coopPeriod: pick(COOP_PERIODS, i),
+      coopPeriod: [`2024-${pad((i % 12) + 1)}-01`, `20${26 + (i % 3)}-${pad((i % 12) + 1)}-01`],
       coopAmount: `${(i + 1) * 10}万`,
-      companySize: pick(COMPANY_SIZES, i),
+      companySize: `${(i % 5 + 1) * 40}`,
       registeredCapital: `${(i + 1) * 80}万`,
       saleType: pick(SALE_TYPES, i),
       platformType: pick(PLATFORM_TYPES, i),
@@ -435,7 +435,7 @@ const agentResource = createResource('org_agent', () =>
       createTime: seedTime(i)
     }
   }),
-  3
+  4
 )
 
 /* ============ 供应商管理 ============ */
@@ -458,7 +458,7 @@ const supplierResource = createResource('org_supplier', () =>
       licenseAddress: `${r.country}${r.city}${pick(['供应链园区', '仓储中心', '产业基地'], i)}${i + 1}号`,
       setupDate: `20${pad(14 + (i % 9))}-${pad((i % 12) + 1)}-20`,
       parentName: '聚货通总部',
-      coopPeriod: pick(COOP_PERIODS, i),
+      coopPeriod: [`2024-${pad((i % 12) + 1)}-01`, `20${26 + (i % 3)}-${pad((i % 12) + 1)}-01`],
       ifRequestPay: pick(YES_NO, i),
       domainPrefix: `sp${pad(i + 1)}`,
       financeStaff: i % 2 === 0 ? [((i % 20) + 2)] : [],
@@ -469,7 +469,7 @@ const supplierResource = createResource('org_supplier', () =>
       createTime: seedTime(i)
     }
   }),
-  3
+  4
 )
 
 /* ============ 通用查询构造 ============ */
