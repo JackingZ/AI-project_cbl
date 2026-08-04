@@ -1,7 +1,8 @@
 // 统一校验：正则 + Element Plus 表单规则 + 必填文案，全项目复用，禁止各页重复写规则
 export const REGEX = {
   phone: /^1[3-9]\d{9}$/,
-  positiveNumber: /^\d+(\.\d{1,2})?$/
+  positiveNumber: /^\d+(\.\d{1,2})?$/,
+  email: /^[\w.-]+@[\w-]+(\.[\w-]+)+$/
 }
 
 // 生成必填规则
@@ -38,6 +39,15 @@ export function letterRule(message = '只能包含字母', { length, trigger = '
 export const phoneRule = {
   validator: (rule, value, cb) => {
     if (value && !REGEX.phone.test(value)) return cb(new Error('请输入正确的手机号'))
+    cb()
+  },
+  trigger: 'blur'
+}
+
+// 邮箱校验规则
+export const emailRule = {
+  validator: (rule, value, cb) => {
+    if (value && !REGEX.email.test(value)) return cb(new Error('请输入正确的邮箱'))
     cb()
   },
   trigger: 'blur'

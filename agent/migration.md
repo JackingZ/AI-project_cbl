@@ -383,3 +383,17 @@ npm run build 通过。
 - 深操作(打印/导出/16项更多)走 demoAction 演示桩。
 
 npm run build 通过。
+
+---
+
+## 十六、系统管理 18 页一致性复审与分批补齐（对齐 workProject2-jht）
+
+18 页审计差异清单存 `agent/plans/system-audit/*.md`。**结论:全 18 页为模板通用 CRUD 骨架,字段虚构、与源真实业务系统性错配、0 权限接入**(同运营模块初始态)。评分普遍严重错配/大缺漏(多页 12-32/100)。多页为独特业务形态(计算器/APK版本管理/权限矩阵/审核台账/号段库存/6-tab设置台)。
+
+### 分批策略(用户定:先中小页+权限,重页后续)
+- **本轮**:① 中小"列表+表单"页重建到源模型:客户评级(rating额度)、司机管理(证件/邮箱/地区/驾照/照片)、车辆管理(车牌/车型/车况/保险/尾板GPS)、岗位提成(计量方式/单位/区间阶梯/版本)、反馈(受理台只读+处理);② 全 18 页接 usePagePerms 按钮权限。
+- **数据层**:system.js 对应 mock 按源字段重写(driver/car/commission/feedback/level),version 升级重建。
+- **后续轮次(千行重页,整页重建+子弹窗)**:发货计划(3718行,多态页+联动筛选+生成Booking)、商品审核(审核台账+定价/认证文件/审核弹窗+双语列)、产品库(多字段+报关信息子CRUD)、航空号段(号段库存分配/回收/导入)、收费重量(计算器工具页)、计划订阅(订阅人+航线/仓库穿梭);特殊形态页(通知配置树/通知中心收件箱/通知管理关联服务/着陆页配置台/PDA APK管理/状态权限矩阵/设置6-tab台)。
+
+### 权限键(逐字对齐源,已在各审计清单标注)
+如司机 addDriver/editDriver/deleteDriver/driverChangeStatus、商品审核 queryCheck/priceCheck/execCheck、发货计划 addPlan/queryPlan/editPlan/deletePlan 等,统一映射 can(add/edit/del/view/enable/audit/handle...)。

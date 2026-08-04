@@ -5,14 +5,14 @@
       <el-form-item label="计划状态">
         <el-select v-model="query.planStatus" placeholder="全部" clearable style="width: 120px"><el-option v-for="s in PLAN_STATUS" :key="s" :label="s" :value="s" /></el-select>
       </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
+      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" @change="v => toggle(row, v)" /></template>
+        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" /></template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -38,12 +38,13 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
+import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { deliveryApi, PLAN_STATUS, STATUS_OPTIONS } from '@/api/modules/system'
 
 defineOptions({ name: 'SysDelivery' })
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(deliveryApi.list, { name: '', planStatus: '' })
+const { can } = usePagePerms()
 const columns = [
   { prop: 'name', label: '计划名称', minWidth: 160 },
   { prop: 'customer', label: '客户', width: 130 },

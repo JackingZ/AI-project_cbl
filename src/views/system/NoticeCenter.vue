@@ -8,7 +8,7 @@
       <el-form-item label="状态">
         <el-select v-model="query.read" placeholder="全部" clearable style="width: 110px"><el-option v-for="r in READ_STATUS" :key="r" :label="r" :value="r" /></el-select>
       </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
+      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
@@ -16,8 +16,8 @@
           <el-tag size="small" :type="row.read === '已读' ? 'info' : 'warning'">{{ row.read }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -41,12 +41,13 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
+import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { noticeCtrApi, NOTICE_TYPES, READ_STATUS } from '@/api/modules/system'
 
 defineOptions({ name: 'SysNoticeCtr' })
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(noticeCtrApi.list, { name: '', type: '', read: '' })
+const { can } = usePagePerms()
 const columns = [
   { prop: 'name', label: '标题', minWidth: 180 },
   { prop: 'type', label: '类型', width: 110 },
