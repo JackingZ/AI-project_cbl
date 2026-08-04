@@ -13,12 +13,12 @@
       </el-form-item>
       <el-form-item label="业务类型">
         <el-select v-model="query.businessType" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="t in BUSINESS_TYPES" :key="t" :label="t" :value="t" />
+          <el-option v-for="t in WH_BIZ_TYPES" :key="t" :label="t" :value="t" />
         </el-select>
       </el-form-item>
       <el-form-item label="订单来源">
         <el-select v-model="query.orderSource" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="s in ORDER_SOURCES" :key="s" :label="s" :value="s" />
+          <el-option v-for="s in WH_SOURCES" :key="s" :label="s" :value="s" />
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
@@ -76,9 +76,9 @@
           <el-tag :type="orderStatusTag(row.status)" size="small">{{ row.status }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
-          <el-button link type="primary" size="small" @click="openBill(row)">账单信息</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('bill')" @click="openBill(row)">账单信息</el-button>
           <el-button link type="primary" size="small" @click="demoAction('流转订单')">流转订单</el-button>
           <el-dropdown trigger="click" @command="cmd => demoAction(cmd)">
             <el-button link type="primary" size="small">更多<el-icon><ArrowDown /></el-icon></el-button>
@@ -106,14 +106,16 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import BillDialog from '@/components/Common/BillDialog.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { confirmDelete, demoAction } from '@/utils'
 import {
   getWarehouseOrders, deleteOrder,
-  BUSINESS_TYPES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES, ORDER_SOURCES, LOAD_METHODS, orderStatusTag
+  WH_BIZ_TYPES, WH_SOURCES, ORDER_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES, LOAD_METHODS, orderStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlWarehouse' })
+
+const { can } = usePagePerms()
 
 // 关键字搜索字段（前置下拉，对齐源页：原单号/柜号）
 const KEY_FIELDS = [

@@ -66,9 +66,9 @@
         </template>
         <template #col-supplierName="{ row }">{{ row.supplierName || '未指派' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="primary" size="small" @click="openVehicle(row)">分配车辆</el-button>
-          <el-button link type="primary" size="small" @click="openDriver(row)">司机信息</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('vehicle')" @click="openVehicle(row)">分配车辆</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDriver(row)">司机信息</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -88,7 +88,7 @@ import ProTable from '@/components/Table/ProTable.vue'
 import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import AssignVehicleDialog from '@/components/Common/AssignVehicleDialog.vue'
 import DriverDialog from '@/components/Common/DriverDialog.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import {
   getCarOrders, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, COMPANY_NAMES, BUSINESS_TYPES, COUNTRIES, SERVICES, orderStatusTag
 } from '@/api/modules/orderlist'
@@ -96,6 +96,7 @@ import {
 defineOptions({ name: 'OlCar' })
 
 const router = useRouter()
+const { can } = usePagePerms()
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getCarOrders, {

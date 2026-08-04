@@ -1,3 +1,4 @@
+<!-- 本页为卡派调度视图的重设计(任务单资源),非源逐字保真 -->
 <template>
   <div>
     <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
@@ -10,7 +11,7 @@
         <el-input v-model="query.keyword" placeholder="任务单号" clearable style="width: 180px" />
       </el-form-item>
       <template #actions>
-        <el-button type="primary" @click="openCreate">新建调度任务单</el-button>
+        <el-button type="primary" :disabled="!can('add')" @click="openCreate">新建调度任务单</el-button>
       </template>
     </SearchBar>
 
@@ -29,7 +30,7 @@
           <el-tag :type="statusTag(row.status)" size="small">{{ row.status }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -71,11 +72,12 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { getScheduleTasks, addScheduleTask, SCHEDULE_STATUS, FLEETS } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlAllocation' })
 
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getScheduleTasks, { keyword: '', status: '' })
 

@@ -51,6 +51,11 @@
             <el-option v-for="c in GOODS_CLAUSES" :key="c" :label="c" :value="c" />
           </el-select>
         </el-form-item>
+        <el-form-item label="服务">
+          <el-select v-model="query.serviceName" placeholder="全部" clearable style="width: 130px">
+            <el-option v-for="s in SERVICES" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="服务商">
           <el-select v-model="query.serviceProvider" placeholder="全部" clearable style="width: 130px">
             <el-option v-for="s in SUPPLIERS" :key="s" :label="s" :value="s" />
@@ -83,14 +88,19 @@
         <template #col-audit="{ row }">
           <el-tag :type="auditStatusTag(row.audit)" size="small" effect="light">{{ row.audit }}</el-tag>
         </template>
+        <template #col-portFromPick="{ row }">{{ row.portFromPick || '-/-' }}</template>
+        <template #col-portFromLoad="{ row }">{{ row.portFromLoad || '-/-' }}</template>
+        <template #col-portFromReturn="{ row }">{{ row.portFromReturn || '-/-' }}</template>
+        <template #col-portToPick="{ row }">{{ row.portToPick || '-/-' }}</template>
+        <template #col-portToReturn="{ row }">{{ row.portToReturn || '-/-' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="warning" size="small" @click="openAudit(row)">审核</el-button>
-          <el-button link type="primary" size="small" @click="openProgress(row)">订单进度</el-button>
-          <el-button link type="primary" size="small" @click="openAssign(row)">指定供应商</el-button>
-          <el-button link type="primary" size="small" @click="openBill(row)">账单信息</el-button>
-          <el-button v-if="row.status !== '已取消'" link type="warning" size="small" @click="doCancel(row)">取消</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button link type="warning" size="small" :disabled="!can('audit')" @click="openAudit(row)">审核</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openProgress(row)">订单进度</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('assign')" @click="openAssign(row)">指定供应商</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('bill')" @click="openBill(row)">账单信息</el-button>
+          <el-button v-if="row.status !== '已取消'" link type="warning" size="small" :disabled="!can('cancel')" @click="doCancel(row)">取消</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -113,15 +123,17 @@ import AssignSupplierDialog from '@/components/Common/AssignSupplierDialog.vue'
 import AuditDialog from '@/components/Common/AuditDialog.vue'
 import ProgressDialog from '@/components/Common/ProgressDialog.vue'
 import BillDialog from '@/components/Common/BillDialog.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { confirmDelete, confirmThen } from '@/utils'
 import {
   getBookingOrders, cancelOrder, deleteOrder,
   ORDER_STATUS, ORDER_TYPES, BUSINESS_TYPES, COMPANY_TYPES, COMPANY_NAMES, PORTS,
-  SERVICE_TERMS, GOODS_CLAUSES, SUPPLIERS, orderStatusTag, auditStatusTag
+  SERVICE_TERMS, GOODS_CLAUSES, SERVICES, SUPPLIERS, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlBooking' })
+
+const { can } = usePagePerms()
 
 // 关键字搜索字段（前置下拉，对齐源页：原单号/SO号/柜号/提单号/航空单号）
 const KEY_FIELDS = [
@@ -136,7 +148,7 @@ const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getBookingOrders, {
     keyword: '', keyField: 'code', orderType: '', businessType: '', status: '',
-    companyType: '', companyName: '', portTo: '', serviceTerms: '', goodsClause: '', serviceProvider: '', dateRange: []
+    companyType: '', companyName: '', portTo: '', serviceTerms: '', goodsClause: '', serviceName: '', serviceProvider: '', dateRange: []
   })
 
 const columns = [
@@ -152,6 +164,12 @@ const columns = [
   { prop: 'portTo', label: '目的港', width: 100 },
   { prop: 'supplierName', label: '供应商名称', width: 120 },
   { prop: 'orderCustomerName', label: '下单客户', width: 110 },
+  // 柜态统计列（对齐源海运视图，纯展示占位 n/N）
+  { prop: 'portFromPick', label: '起运港提柜', width: 110, align: 'center' },
+  { prop: 'portFromLoad', label: '起运港已装柜', width: 120, align: 'center' },
+  { prop: 'portFromReturn', label: '起运港已还柜', width: 120, align: 'center' },
+  { prop: 'portToPick', label: '目的港已提柜', width: 120, align: 'center' },
+  { prop: 'portToReturn', label: '目的港已还柜', width: 120, align: 'center' },
   { prop: 'createTime', label: '下单时间', width: 160 }
 ]
 

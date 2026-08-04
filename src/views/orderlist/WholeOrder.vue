@@ -18,7 +18,7 @@
       </el-form-item>
       <el-form-item label="业务类型">
         <el-select v-model="query.businessType" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="t in BUSINESS_TYPES" :key="t" :label="t" :value="t" />
+          <el-option v-for="t in TRANSPORT_TYPES" :key="t" :label="t" :value="t" />
         </el-select>
       </el-form-item>
       <el-form-item label="关键字">
@@ -59,6 +59,46 @@
         <el-form-item label="服务">
           <el-select v-model="query.serviceName" placeholder="全部" clearable style="width: 130px">
             <el-option v-for="s in SERVICES" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="入库状态">
+          <el-select v-model="query.inStatus" placeholder="全部" clearable style="width: 120px">
+            <el-option v-for="s in IN_STATUS" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="计量状态">
+          <el-select v-model="query.measureStatus" placeholder="全部" clearable style="width: 120px">
+            <el-option v-for="s in MEASURE_STATUS" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="验货状态">
+          <el-select v-model="query.inspectStatus" placeholder="全部" clearable style="width: 120px">
+            <el-option v-for="s in INSPECT_STATUS" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="报关状态">
+          <el-select v-model="query.declareStatus" placeholder="全部" clearable style="width: 120px">
+            <el-option v-for="s in DECLARE_STATUS" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否发货">
+          <el-select v-model="query.ifShip" placeholder="全部" clearable style="width: 110px">
+            <el-option v-for="s in SHIP_OPTIONS" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="派送方式">
+          <el-select v-model="query.deliverMethod" placeholder="全部" clearable style="width: 130px">
+            <el-option v-for="m in DELIVER_METHODS" :key="m" :label="m" :value="m" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="报关方式">
+          <el-select v-model="query.declareMethod" placeholder="全部" clearable style="width: 130px">
+            <el-option v-for="m in DECLARE_METHODS" :key="m" :label="m" :value="m" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否冻结">
+          <el-select v-model="query.frozen" placeholder="全部" clearable style="width: 110px">
+            <el-option v-for="s in YES_NO" :key="s" :label="s" :value="s" />
           </el-select>
         </el-form-item>
         <el-form-item label="下单时间">
@@ -109,13 +149,18 @@
           <span :class="{ 'ol-overdue': row.overdueDays > 0 }">{{ row.overdueDays || 0 }}</span>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button v-if="row.status !== '已取消'" link type="warning" size="small" @click="openAudit(row)">订单审核</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button v-if="row.status !== '已取消'" link type="warning" size="small" :disabled="!can('audit')" @click="openAudit(row)">订单审核</el-button>
           <el-dropdown trigger="click" @command="cmd => onCommand(cmd, row)">
             <el-button link type="primary" size="small">更多<el-icon><ArrowDown /></el-icon></el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item v-for="m in MORE_ITEMS" :key="m" :command="m">{{ m }}</el-dropdown-item>
+                <el-dropdown-item
+                  v-for="m in MORE_ITEMS"
+                  :key="m"
+                  :command="m"
+                  :disabled="(m === '删除订单' && !can('del')) || (m === '取消订单' && !can('cancel'))"
+                >{{ m }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -138,16 +183,19 @@ import ProTable from '@/components/Table/ProTable.vue'
 import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import AuditDialog from '@/components/Common/AuditDialog.vue'
 import BillDialog from '@/components/Common/BillDialog.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { confirmThen, demoAction } from '@/utils'
 import { formatMoney } from '@/utils/format'
 import {
   getWholeOrders, cancelOrder, deleteOrder,
-  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES,
-  COUNTRIES, FBA_WAREHOUSES, SERVICES, orderStatusTag, auditStatusTag
+  TRANSPORT_TYPES, ORDER_STATUS, AUDIT_STATUS, ORDER_TYPES, COMPANY_TYPES, COMPANY_NAMES,
+  COUNTRIES, FBA_WAREHOUSES, SERVICES, IN_STATUS, MEASURE_STATUS, INSPECT_STATUS,
+  DECLARE_METHODS, DELIVER_METHODS, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlWhole' })
+
+const { can } = usePagePerms()
 
 // 关键字搜索字段（前置下拉，对齐源页：原单号/客户名称/快递单号）
 const KEY_FIELDS = [
@@ -155,12 +203,18 @@ const KEY_FIELDS = [
   { label: '客户名称', value: 'customerName' },
   { label: '快递单号', value: 'expressNo' }
 ]
+// 更多筛选状态类静态占位选项（对齐源 searchMore，不参与真实过滤）
+const DECLARE_STATUS = ['待报关', '报关中', '已放行']
+const SHIP_OPTIONS = ['已发货', '未发货']
+const YES_NO = ['是', '否']
 
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getWholeOrders, {
     keyword: '', keyField: 'code', exact: false, orderType: '', status: '', audit: '', businessType: '',
-    companyType: '', companyName: '', destinationCountry: '', fbaWarehouse: '', serviceName: '', dateRange: []
+    companyType: '', companyName: '', destinationCountry: '', fbaWarehouse: '', serviceName: '',
+    inStatus: '', measureStatus: '', inspectStatus: '', declareStatus: '', ifShip: '',
+    deliverMethod: '', declareMethod: '', frozen: '', dateRange: []
   })
 
 const columns = [

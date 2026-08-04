@@ -6,7 +6,7 @@
           <el-col :span="8">
             <el-form-item label="业务类型" prop="businessType">
               <el-select v-model="form.businessType" placeholder="请选择" style="width: 100%">
-                <el-option v-for="t in BUSINESS_TYPES" :key="t" :label="t" :value="t" />
+                <el-option v-for="t in SALESMAN_TRANSPORT" :key="t" :label="t" :value="t" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -87,7 +87,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import Empty from '@/components/Common/Empty.vue'
 import { required } from '@/utils/validate'
 import { formatMoney } from '@/utils/format'
-import { addOrder, BUSINESS_TYPES, COUNTRIES } from '@/api/modules/orderlist'
+import { addOrder, SALESMAN_TRANSPORT, COUNTRIES } from '@/api/modules/orderlist'
 
 const router = useRouter()
 const formRef = ref(null)

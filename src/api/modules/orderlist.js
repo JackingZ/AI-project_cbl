@@ -45,6 +45,14 @@ export const SERVICE_TERMS = ['CIF', 'FOB', 'EXW', 'DDP', 'DDU']
 export const GOODS_CLAUSES = ['电放', '正本', 'HBL', 'MBL']
 export const SCHEDULE_STATUS = ['待调度', '调度中', '已完成', '已取消']
 export const FLEETS = ['自营车队', '合作车队A', '合作车队B']
+// 各页专属枚举（对齐源，替换此前误用的通用常量）
+export const TRANSPORT_TYPES = ['空运', '海运', '铁路', '卡航']            // 全程/签收 业务类型(运输方式)
+export const SALESMAN_TRANSPORT = ['空运', '海运', '铁路', '快递', '卡航'] // 代客下单 业务类型(含快递)
+export const WH_BIZ_TYPES = ['仓储', '散收拼货', '拆柜打托']              // 仓库订单 业务类型
+export const WH_SOURCES = ['客户端', '专线']                             // 仓库订单 来源
+export const CUSTOMS_ORDER_STATUS = ['新建', '报关放行', '报关查验', '退运'] // 报关 订单状态
+export const CUSTOMS_CATEGORIES = ['报关', '报检', '报关&报检']            // 报关 订单类别
+export const CUSTOMS_DECLARE_TYPES = ['普通报关', '出口退税', '整柜买单']   // 报关 报关类型
 
 // 状态 → el-tag 类型
 export function orderStatusTag(s) {
@@ -138,7 +146,8 @@ const orderResource = createResource('orderlist', () =>
       measureStatus: at(MEASURE_STATUS, i),
       measureAudit: i % 2 === 0 ? '已审核' : '待审核',
       inspectStatus: at(INSPECT_STATUS, i),
-      declareType: at(DECLARE_TYPES, i),
+      declareType: at(CUSTOMS_DECLARE_TYPES, i),
+      category: at(CUSTOMS_CATEGORIES, i),
       fileStatus: at(FILE_STATUS, i),
       countryName: at(COUNTRIES, i),
       sellerName: `销售${pad((i % 12) + 1)}`,
@@ -151,7 +160,7 @@ const orderResource = createResource('orderlist', () =>
       airNo: businessType === '订舱' && i % 2 === 0 ? `AW${String(900000 + i * 31).slice(0, 6)}` : '',
       packageType: '箱'
     }
-  }), 2
+  }), 3
 )
 
 /* ============ 调度任务单（卡派派生） ============ */
@@ -223,7 +232,23 @@ export const getTrailerOrders = byType('拖车')
 export function getCustomsOrders(p = {}) {
   return orderResource.query(
     o => o.businessType === '报关' && baseMatch(o, { ...p, businessType: '' }) &&
-      (!p.ioType || o.ioType === p.ioType),
+      (!p.ioType || o.ioType === p.ioType) &&
+      (!p.category || o.category === p.category) &&
+      (!p.declareType || o.declareType === p.declareType),
+    paged(p)
+  )
+}
+// 报关订单-按柜视图：以柜/提单维度派生（供应商/起运国/目的国/进出口/报关报检状态/柜号提单号）
+export function getCustomsCabinets(p = {}) {
+  return orderResource.query(
+    o => o.businessType === '报关' &&
+      (!p.supplierName || o.supplierName === p.supplierName) &&
+      (!p.startCountry || o.startCountry === p.startCountry) &&
+      (!p.destinationCountry || o.destinationCountry === p.destinationCountry) &&
+      (!p.ioType || o.ioType === p.ioType) &&
+      (!p.declareStatus || o.declareStatus === p.declareStatus) &&
+      (!p.inspectionStatus || o.inspectionStatus === p.inspectionStatus) &&
+      (!p.keyword || String(o.containerNo ?? '').includes(p.keyword) || String(o.billNo ?? '').includes(p.keyword)),
     paged(p)
   )
 }
@@ -265,7 +290,9 @@ export function addOrder(data) {
 export function deleteOrder(id) { return orderResource.remove(id) }
 export function cancelOrder(id) { return orderResource.update(id, { status: '已取消' }) }
 export function auditOrder(id, audit) { return orderResource.update(id, { audit }) }
-export function signOrder(id) { return orderResource.update(id, { signStatus: '已签收', signTime: now() }) }
+export function signOrder(id, data = {}) {
+  return orderResource.update(id, { signStatus: '已签收', signTime: data.signTime || now(), ...data })
+}
 export function assignSupplier(id, data) { return orderResource.update(id, data) }
 // 派车（卡派/拖车）
 export function assignVehicle(id, data) {

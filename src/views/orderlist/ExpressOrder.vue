@@ -65,12 +65,12 @@
           <el-tag :type="orderStatusTag(row.status)" size="small">{{ row.status }}</el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="primary" size="small" @click="demoAction('重新提交')">重新提交</el-button>
-          <el-button link type="warning" size="small" @click="doRevoke(row)">撤单</el-button>
-          <el-button link type="primary" size="small" @click="openSwap(row)">换单</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('resubmit')" @click="demoAction('重新提交')">重新提交</el-button>
+          <el-button link type="warning" size="small" :disabled="!can('revoke')" @click="doRevoke(row)">撤单</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('swap')" @click="openSwap(row)">换单</el-button>
           <el-dropdown trigger="click" @command="cmd => demoAction(cmd)">
-            <el-button link type="primary" size="small">更多<el-icon><ArrowDown /></el-icon></el-button>
+            <el-button link type="primary" size="small" :disabled="!can('export')">更多<el-icon><ArrowDown /></el-icon></el-button>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item v-for="m in MORE_ITEMS" :key="m" :command="m">{{ m }}</el-dropdown-item>
@@ -94,7 +94,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import SwapDialog from '@/components/Common/SwapDialog.vue'
-import { useListQuery } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { confirmThen, demoAction } from '@/utils'
 import {
   getExpressOrders, cancelOrder,
@@ -109,6 +109,7 @@ const KEY_FIELDS = [
   { label: '快递单号', value: 'expressNo' }
 ]
 
+const { can } = usePagePerms()
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getExpressOrders, {

@@ -41,6 +41,9 @@
         <el-form-item label="进仓时间">
           <el-date-picker v-model="query.warehouseRange" type="daterange" start-placeholder="起始" end-placeholder="截止" style="width: 240px" />
         </el-form-item>
+        <el-form-item label="创建时间">
+          <el-date-picker v-model="query.createRange" type="daterange" start-placeholder="起始" end-placeholder="截止" style="width: 240px" />
+        </el-form-item>
       </template>
       <template #actions>
         <el-button link type="primary" @click="showMore = !showMore">{{ showMore ? '收起筛选' : '更多筛选' }}</el-button>
@@ -66,11 +69,10 @@
         </template>
         <template #col-supplierName="{ row }">{{ row.supplierName || '未指派' }}</template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="primary" size="small" @click="openAssign(row)">指定供应商</el-button>
-          <el-button link type="primary" size="small" @click="openVehicle(row)">分配车辆</el-button>
-          <el-button link type="primary" size="small" @click="openBill(row)">账单信息</el-button>
-          <el-button v-if="row.status !== '已取消'" link type="warning" size="small" @click="doCancel(row)">取消</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('assign')" @click="openAssign(row)">指定供应商</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('vehicle')" @click="openVehicle(row)">分配车辆</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('bill')" @click="openBill(row)">账单信息</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -91,20 +93,20 @@ import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import AssignSupplierDialog from '@/components/Common/AssignSupplierDialog.vue'
 import AssignVehicleDialog from '@/components/Common/AssignVehicleDialog.vue'
 import BillDialog from '@/components/Common/BillDialog.vue'
-import { useListQuery } from '@/utils/hooks'
-import { confirmThen } from '@/utils'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import {
-  getTrailerOrders, cancelOrder, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, COMPANY_NAMES,
+  getTrailerOrders, ORDER_TYPES, ORDER_STATUS, COMPANY_TYPES, COMPANY_NAMES,
   TRAILER_TYPES, PORTS, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlTrailer' })
 
+const { can } = usePagePerms()
 const showMore = ref(false)
 const { query, list, total, loading, loadData, handleSearch, handleReset } =
   useListQuery(getTrailerOrders, {
     keyword: '', orderType: '', status: '', trailerType: '',
-    companyType: '', companyName: '', portFrom: '', pickRange: [], warehouseRange: []
+    companyType: '', companyName: '', portFrom: '', pickRange: [], warehouseRange: [], createRange: []
   })
 
 const columns = [
@@ -130,8 +132,4 @@ const openDetail = row => { current.value = row; detailVisible.value = true }
 const openAssign = row => { current.value = row; assignVisible.value = true }
 const openVehicle = row => { current.value = row; vehicleVisible.value = true }
 const openBill = row => { current.value = row; billVisible.value = true }
-
-const doCancel = row =>
-  confirmThen(`确定取消订单「${row.orderNo}」吗？`, async () => { await cancelOrder(row.id); loadData() },
-    { title: '取消订单', success: '订单已取消' })
 </script>

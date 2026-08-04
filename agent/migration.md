@@ -353,3 +353,33 @@
 - 权限键未逐字复刻(既定 can() 体系)。
 
 npm run build 通过。
+
+---
+
+## 十五、订单管理 10 页一致性复审与补齐（对齐 workProject2-jht）
+
+按"逐字段"标准复审订单管理，差异清单存 `agent/plans/orderlist-audit/*.md`。commodity-audit(商品审核)源路由已注释、归属系统管理，不计订单缺漏。
+
+### 审计结论
+报关订单(大缺漏) / 全程·签收·代客·仓库(小差异) / 卡派85·快递88·订舱80·拖车82 / 调度任务单(刻意重设计)。
+
+### 已补真实缺漏（4 类）
+1. **业务类型/状态枚举语义对齐**(数据层新增各页专属常量)：TRANSPORT_TYPES(空运/海运/铁路/卡航→全程·签收)、SALESMAN_TRANSPORT(含快递→代客+录单)、WH_BIZ_TYPES(仓储/散收拼货/拆柜打托)+WH_SOURCES(客户端/专线→仓库)、CUSTOMS_ORDER_STATUS/CUSTOMS_CATEGORIES/CUSTOMS_DECLARE_TYPES(报关)。此前误用通用 BUSINESS_TYPES/ORDER_STATUS/IO_TYPES 已改。
+2. **按钮权限全页接入**：11 页(含调度)接 usePagePerms().can()，动作 view/audit/sign/entry/del/cancel/bill/assign/vehicle/resubmit/revoke/swap/export/add，未授权置灰；查询/向导流程按钮不控。
+3. **清理多余按钮**：代客顶部"已出"、拖车操作列"取消"(源无)移除。
+4. **补缺失筛选/列/结构**：
+   - 报关订单：补"按订单/按柜"radio 双模式(按柜筛选 供应商/起运国/目的国/进出口/报关状态/报检状态/柜号提单号 + 按柜表格)；getCustomsCabinets 派生；订单类别/报关类型枚举对齐。
+   - 订舱：补"服务"筛选 + 5 柜态统计列(起运港提柜/已装柜/已还柜/目的港已提柜/已还柜)。
+   - 拖车：补"创建时间"范围筛选。
+   - 全程/签收：更多筛选补 searchMore 状态类占位下拉(入库/计量/验货/报关状态/是否发货/派送方式/报关方式)。
+   - 订单签收：签收由纯确认框改为弹窗(签收时间 + 签收单上传 base64)。
+   - 代客：录单按钮加"未录单才显示"条件。
+5. mock 报关记录补 category、declareType 改专属枚举值，orderResource version→3 重建。
+
+### 记录待议(未改)
+- 详情弹窗统一 OrderDetailDialog，各业务专属字段(发货人/收货人/费用/多状态)缩减——弹窗简化策略。
+- 快递"重新提交"降级为 demoAction(源为完整表单页)。
+- 调度任务单为卡派调度视图的重设计(任务单资源)，非源逐字保真，已在页内标注。
+- 深操作(打印/导出/16项更多)走 demoAction 演示桩。
+
+npm run build 通过。

@@ -31,7 +31,7 @@
       <template v-if="showMore">
         <el-form-item label="业务类型">
           <el-select v-model="query.businessType" placeholder="全部" clearable style="width: 120px">
-            <el-option v-for="t in BUSINESS_TYPES" :key="t" :label="t" :value="t" />
+            <el-option v-for="t in SALESMAN_TRANSPORT" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="目的国家">
@@ -55,7 +55,6 @@
       </template>
       <template #actions>
         <el-button link type="primary" @click="showMore = !showMore">{{ showMore ? '收起筛选' : '更多筛选' }}</el-button>
-        <el-button @click="demoAction('已出')">已出</el-button>
       </template>
     </SearchBar>
 
@@ -90,8 +89,8 @@
           <el-button link type="primary" size="small" @click="openBill(row)">{{ row.billStatus }}</el-button>
         </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-          <el-button link type="primary" size="small" @click="goEntry(row)">录单</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看</el-button>
+          <el-button v-if="row.entryStatus !== '已录单'" link type="primary" size="small" :disabled="!can('entry')" @click="goEntry(row)">录单</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -109,17 +108,17 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import OrderDetailDialog from '@/components/Common/OrderDetailDialog.vue'
 import BillDialog from '@/components/Common/BillDialog.vue'
-import { useListQuery } from '@/utils/hooks'
-import { demoAction } from '@/utils'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { formatMoney } from '@/utils/format'
 import {
   getSalesmanOrders,
-  BUSINESS_TYPES, ORDER_STATUS, AUDIT_STATUS, ENTRY_STATUS,
+  SALESMAN_TRANSPORT, ORDER_STATUS, AUDIT_STATUS, ENTRY_STATUS,
   COUNTRIES, FBA_WAREHOUSES, SERVICES, orderStatusTag, auditStatusTag
 } from '@/api/modules/orderlist'
 
 defineOptions({ name: 'OlSalesman' })
 
+const { can } = usePagePerms()
 const router = useRouter()
 // 关键字搜索字段（前置下拉，对齐源页：原单号）
 const KEY_FIELDS = [
