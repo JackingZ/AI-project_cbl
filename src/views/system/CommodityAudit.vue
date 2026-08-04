@@ -1,62 +1,106 @@
 <template>
   <div>
     <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="商品名称"><el-input v-model="query.name" placeholder="请输入名称" clearable style="width: 170px" /></el-form-item>
+      <el-form-item label="目的国">
+        <el-select v-model="query.countryName" placeholder="全部" clearable filterable style="width: 130px">
+          <el-option v-for="c in COUNTRIES" :key="c" :label="c" :value="c" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="审核状态">
-        <el-select v-model="query.audit" placeholder="全部" clearable style="width: 120px"><el-option v-for="a in AUDIT_STATUS" :key="a" :label="a" :value="a" /></el-select>
+        <el-select v-model="query.state" placeholder="全部" clearable style="width: 120px">
+          <el-option v-for="(s, i) in PRODUCT_STATE" :key="i" :label="s" :value="i" />
+        </el-select>
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px"><el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" /></el-select>
+      <el-form-item label="价格定义">
+        <el-select v-model="query.ifPrice" placeholder="全部" clearable style="width: 120px">
+          <el-option label="未配置" :value="0" />
+          <el-option label="已配置" :value="1" />
+        </el-select>
       </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
+      <el-form-item label="关键词">
+        <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 300px">
+          <template #prepend>
+            <el-select v-model="query.selectType" style="width: 120px">
+              <el-option label="海关编码" value="1" />
+              <el-option label="中文名称" value="2" />
+              <el-option label="英文名称" value="3" />
+            </el-select>
+          </template>
+        </el-input>
+      </el-form-item>
     </SearchBar>
     <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" /></template>
+      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="320" @change="loadData">
+        <template #col-state="{ row }">
+          <el-tag :type="STATE_TAG[row.state]" size="small">{{ PRODUCT_STATE[row.state] }}</el-tag>
+        </template>
+        <template #col-goodsName="{ row }">
+          <div class="item-word">{{ row.cnName || '--' }}</div>
+          <div class="item-word">{{ row.enName || '--' }}</div>
+        </template>
+        <template #col-material="{ row }">
+          <div class="item-word">{{ row.cnMaterial || '--' }}</div>
+          <div class="item-word">{{ row.enMaterial || '--' }}</div>
+        </template>
+        <template #col-purpose="{ row }">
+          <div class="item-word">{{ row.cnPurpose || '--' }}</div>
+          <div class="item-word">{{ row.enPurpose || '--' }}</div>
+        </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('price')" @click="goPrice(row)">
+            <span class="price-dot" :class="row.ifPrice === 1 ? 'price-dot--on' : 'price-dot--off'"></span>定义价格
+          </el-button>
+          <el-button v-if="row.state !== 1" link type="primary" size="small" :disabled="!can('audit')" @click="goAudit(row)">审核</el-button>
+          <el-button v-else link type="primary" size="small" @click="goView(row)">查看</el-button>
+          <el-button link type="primary" size="small" @click="goFiles(row)">认证文件</el-button>
+          <el-button link type="primary" size="small" @click="goCustomers(row)">查看客户</el-button>
         </template>
       </ProTable>
     </PageCard>
-    <Modal v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="商品名称" prop="name"><el-input v-model="form.name" placeholder="请输入名称" /></el-form-item>
-        <el-form-item label="海关编码" prop="hsCode"><el-input v-model="form.hsCode" placeholder="请输入编码" /></el-form-item>
-        <el-form-item label="审核状态" prop="audit">
-          <el-select v-model="form.audit" style="width: 100%"><el-option v-for="a in AUDIT_STATUS" :key="a" :label="a" :value="a" /></el-select>
-        </el-form-item>
-        <el-form-item label="客户" prop="customer"><el-input v-model="form.customer" placeholder="请输入客户" /></el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status"><el-radio v-for="s in STATUS_OPTIONS" :key="s" :value="s">{{ s }}</el-radio></el-radio-group>
-        </el-form-item>
-      </el-form>
-    </Modal>
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
-import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
-import { required } from '@/utils/validate'
-import { commodityApi, AUDIT_STATUS, STATUS_OPTIONS } from '@/api/modules/system'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { commodityApi, PRODUCT_STATE } from '@/api/modules/system'
+import { COUNTRIES } from '@/api/modules/orderlist'
+import { demoAction } from '@/utils/index'
 
 defineOptions({ name: 'SysCommodity' })
-const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(commodityApi.list, { name: '', audit: '', status: '' })
+const STATE_TAG = ['info', 'success', 'danger']
+const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(commodityApi.list, { countryName: '', state: '', ifPrice: '', keyword: '', selectType: '1' })
 const { can } = usePagePerms()
 const columns = [
-  { prop: 'name', label: '商品名称', minWidth: 150 },
-  { prop: 'hsCode', label: '海关编码', width: 120 },
-  { prop: 'audit', label: '审核状态', width: 110, align: 'center' },
-  { prop: 'customer', label: '客户', width: 120 },
-  { prop: 'status', label: '状态', width: 90, align: 'center' },
-  { prop: 'createTime', label: '创建时间', width: 170 }
+  { prop: 'startCountryName', label: '起运国', width: 90 },
+  { prop: 'countryName', label: '目的国', width: 90 },
+  { prop: 'state', label: '审核状态', width: 100, align: 'center' },
+  { prop: 'code', label: '海关编码', width: 110 },
+  { prop: 'goodsName', label: '商品名称(中文/英文)', minWidth: 180 },
+  { prop: 'brand', label: '品牌', width: 100 },
+  { prop: 'size', label: '规格', width: 90 },
+  { prop: 'material', label: '材质(中文/英文)', minWidth: 150 },
+  { prop: 'purpose', label: '用途(中文/英文)', minWidth: 150 },
+  { prop: 'unitName', label: '计量单位', width: 90, align: 'center' },
+  { prop: 'title', label: '商品类别', width: 100 },
+  { prop: 'createTime', label: '添加时间', width: 160 }
 ]
-const rules = { name: [required('请输入名称')] }
-const defaultForm = () => ({ name: '', hsCode: '', audit: '待审核', customer: '', status: '启用' })
-const { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove } = useCrudForm({ api: commodityApi, defaultForm, reload: loadData, label: '商品' })
+
+// 深业务弹窗（定价/审核/认证文件/查看客户）走占位
+const goPrice = () => demoAction('定义价格')
+const goAudit = () => demoAction('商品审核')
+const goView = () => demoAction('查看商品')
+const goFiles = () => demoAction('认证文件')
+const goCustomers = () => demoAction('查看客户')
 </script>
+
+<style scoped lang="scss">
+.item-word { line-height: 1.4; }
+.price-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle;
+  &--on { background: var(--el-color-success); }
+  &--off { background: var(--el-color-danger); }
+}
+</style>

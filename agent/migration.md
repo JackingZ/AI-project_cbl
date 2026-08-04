@@ -397,3 +397,11 @@ npm run build 通过。
 
 ### 权限键(逐字对齐源,已在各审计清单标注)
 如司机 addDriver/editDriver/deleteDriver/driverChangeStatus、商品审核 queryCheck/priceCheck/execCheck、发货计划 addPlan/queryPlan/editPlan/deletePlan 等,统一映射 can(add/edit/del/view/enable/audit/handle...)。
+
+### 第二批完成（重页 + 特殊形态页，18/18 全部重建）
+- **业务重页**：收费重量(计算器工具页,算法保真移植:实重/最大值/平均值+分泡+多件累加比较)、航空号段(按航司库存统计+分配/导入/操作日志 demoAction)、产品库(审核状态+双语名/材质/用途+报关信息入口+图片上传+多字段表单)、商品审核(只读审核台账+双语列+定价/审核/认证文件 demoAction)、计划订阅(订阅人+三通知开关+三订阅内容+航线/仓库穿梭)、发货计划(订舱计划列表+派件方式/装载/状态+详情弹窗+生成订舱)。
+- **特殊形态页**：通知配置(通知类型树+5通知方式复选+接收人配置)、通知中心(收件箱:类型分组+未读计数tab+批量已读+详情)、通知管理(通知项×四类客户+服务穿梭+模版)、着陆页(单表单配置台+ImgUploader图片上传+联系电话/工作时间)、PDA(APK版本管理:版本号/更新日志/apk上传/强制更新/上下线互斥/下载)、状态设置(状态-角色权限矩阵:5角色×查看/下载+排序描述)、设置(复用 MoreInfoPanel 渲染聚货通6-tab档案)。
+- **共享组件**：新增 ImgUploader.vue(base64图片上传);MoreInfoPanel 增 showBack/can props(非破坏,组织管理三页不受影响);organizerMore.js 增 jht 档案 seed。
+- mock 全部按源字段重写,version 升级重建。18 页全接 usePagePerms。npm run build 通过。
+
+**系统管理 18 页全部完成逐字段对齐。** 深交互(报关子CRUD/权限矩阵保存/穿梭/APK上传/审核流)走 demoAction 演示桩(与订单管理既定模式一致)。

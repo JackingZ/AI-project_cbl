@@ -1,60 +1,153 @@
 <template>
   <div>
-    <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="通知标题"><el-input v-model="query.name" placeholder="请输入标题" clearable style="width: 170px" /></el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="query.type" placeholder="全部" clearable style="width: 110px"><el-option label="系统" value="系统" /><el-option label="公告" value="公告" /></el-select>
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px"><el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" /></el-select>
-      </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
-    </SearchBar>
-    <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" /></template>
+    <PageCard title="通知管理">
+      <p class="notice-mng__tip">配置各通知项对四类客户（聚货通 / 供应商 / 代理商 / 客户）的启用与关联服务，并维护通知模版。</p>
+      <ProTable
+        v-model:page="query.page"
+        v-model:size="query.size"
+        :data="list"
+        :columns="columns"
+        :loading="loading"
+        :total="total"
+        :action-width="120"
+        @change="loadData"
+      >
+        <template #col-cust="{ row }">
+          <div class="notice-mng__cust">
+            <div v-for="c in NOTICE_CUST_TYPES" :key="c.key" class="notice-mng__cust-item">
+              <el-checkbox
+                :model-value="row[c.key]"
+                :label="c.label"
+                :disabled="!can('enable')"
+                @change="v => toggleCust(row, c.key, v)"
+              />
+              <el-button link type="primary" size="small" :disabled="!can('editService')" @click="openService(row, c)">
+                服务({{ (row[c.key + 'Services'] || []).length }})
+              </el-button>
+            </div>
+          </div>
+        </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('editTemplate')" @click="openTemplate(row)">通知模版</el-button>
         </template>
       </ProTable>
     </PageCard>
-    <Modal v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="通知标题" prop="name"><el-input v-model="form.name" placeholder="请输入标题" /></el-form-item>
-        <el-form-item label="类型" prop="type">
-          <el-select v-model="form.type" style="width: 100%"><el-option label="系统" value="系统" /><el-option label="公告" value="公告" /></el-select>
+
+    <!-- 通知模版弹窗 -->
+    <Modal v-model="tplDlg.visible" title="通知模版" :confirm-loading="tplDlg.loading" @confirm="saveTemplate">
+      <el-form ref="tplRef" :model="tplForm" :rules="tplRules" label-width="90px">
+        <el-form-item label="模板标题" prop="templateTitle">
+          <el-input v-model="tplForm.templateTitle" maxlength="20" show-word-limit placeholder="请输入模板标题" />
         </el-form-item>
-        <el-form-item label="发布人" prop="publisher"><el-input v-model="form.publisher" placeholder="请输入发布人" /></el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status"><el-radio v-for="s in STATUS_OPTIONS" :key="s" :value="s">{{ s }}</el-radio></el-radio-group>
+        <el-form-item label="模板内容" prop="templateContent">
+          <el-input v-model="tplForm.templateContent" type="textarea" :rows="5" placeholder="支持占位符，如 {客户名称}" />
         </el-form-item>
       </el-form>
+    </Modal>
+
+    <!-- 关联服务穿梭框弹窗 -->
+    <Modal v-model="svcDlg.visible" :title="`关联服务 - ${svcDlg.custLabel}`" width="640px" :confirm-loading="svcDlg.loading" @confirm="saveService">
+      <p class="notice-mng__tip">为「{{ svcDlg.row?.msgSubType }}」的{{ svcDlg.custLabel }}关联需要触发该通知的服务。</p>
+      <el-transfer
+        v-model="svcKeys"
+        :data="serviceData"
+        :titles="['服务', '已选择']"
+        filterable
+        filter-placeholder="搜索服务"
+      />
     </Modal>
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
-import SearchBar from '@/components/Common/SearchBar.vue'
+import { ref, reactive, computed } from 'vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
-import { noticeMngApi, STATUS_OPTIONS } from '@/api/modules/system'
+import { noticeMngApi, NOTICE_CUST_TYPES, NOTICE_SERVICES } from '@/api/modules/system'
 
 defineOptions({ name: 'SysNoticeMng' })
-const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(noticeMngApi.list, { name: '', type: '', status: '' })
 const { can } = usePagePerms()
+// 源为全量表格（无筛选、无分页）
+const { query, list, total, loading, loadData } = useListQuery(noticeMngApi.list, {})
+
 const columns = [
-  { prop: 'name', label: '通知标题', minWidth: 180 },
-  { prop: 'type', label: '类型', width: 110 },
-  { prop: 'publisher', label: '发布人', width: 120 },
-  { prop: 'status', label: '状态', width: 90, align: 'center' },
-  { prop: 'createTime', label: '创建时间', width: 170 }
+  { prop: 'msgType', label: '通知类型', width: 120 },
+  { prop: 'msgSubType', label: '通知项', minWidth: 160 },
+  { prop: 'cust', label: '关联服务（四类客户）', minWidth: 460 }
 ]
-const rules = { name: [required('请输入标题')] }
-const defaultForm = () => ({ name: '', type: '系统', publisher: '', status: '启用' })
-const { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove } = useCrudForm({ api: noticeMngApi, defaultForm, reload: loadData, label: '通知' })
+
+// 四类客户启用勾选
+const toggleCust = async (row, key, val) => {
+  await noticeMngApi.update(row.id, { [key]: val })
+  row[key] = val
+  ElMessage.success(val ? '已启用' : '已停用')
+}
+
+// 通知模版弹窗
+const tplRef = ref(null)
+const tplDlg = reactive({ visible: false, loading: false, id: null })
+const tplForm = reactive({ templateTitle: '', templateContent: '' })
+const tplRules = { templateTitle: [required('请输入模板标题')], templateContent: [required('请输入模板内容')] }
+const openTemplate = row => {
+  tplDlg.id = row.id
+  tplForm.templateTitle = row.templateTitle
+  tplForm.templateContent = row.templateContent
+  tplDlg.visible = true
+  tplRef.value?.clearValidate()
+}
+const saveTemplate = async () => {
+  await tplRef.value.validate()
+  tplDlg.loading = true
+  try {
+    await noticeMngApi.update(tplDlg.id, { templateTitle: tplForm.templateTitle, templateContent: tplForm.templateContent })
+    const row = list.value.find(r => r.id === tplDlg.id)
+    if (row) Object.assign(row, { templateTitle: tplForm.templateTitle, templateContent: tplForm.templateContent })
+    tplDlg.visible = false
+    ElMessage.success('模版已保存')
+  } finally {
+    tplDlg.loading = false
+  }
+}
+
+// 关联服务穿梭框
+const svcDlg = reactive({ visible: false, loading: false, row: null, custKey: '', custLabel: '' })
+const svcKeys = ref([])
+const serviceData = computed(() => NOTICE_SERVICES.map(s => ({ key: s, label: s })))
+const openService = (row, cust) => {
+  Object.assign(svcDlg, { visible: true, row, custKey: cust.key, custLabel: cust.label })
+  svcKeys.value = [...(row[cust.key + 'Services'] || [])]
+}
+const saveService = async () => {
+  svcDlg.loading = true
+  try {
+    const field = svcDlg.custKey + 'Services'
+    await noticeMngApi.update(svcDlg.row.id, { [field]: [...svcKeys.value] })
+    svcDlg.row[field] = [...svcKeys.value]
+    svcDlg.visible = false
+    ElMessage.success('关联服务已保存')
+  } finally {
+    svcDlg.loading = false
+  }
+}
 </script>
+
+<style scoped lang="scss">
+.notice-mng__tip {
+  color: $text-secondary;
+  font-size: $font-sm;
+  margin-bottom: $space-md;
+}
+.notice-mng__cust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-md;
+}
+.notice-mng__cust-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+</style>

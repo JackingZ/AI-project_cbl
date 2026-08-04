@@ -36,10 +36,19 @@ function seed() {
       }
     }
   })
+  // 聚货通自身档案（设置页），ownerId 固定为 0
+  const jht = { ownerType: 'jht', ownerId: 0 }
+  const jc = COUNTRIES[0]
+  push({ ...jht, tab: 'contact', country: jc, dept: '运营中心', duty: '客服主管', name: '聚货通客服', tel: '0755-88886666', phone: '13900000000', email: 'service@jht.com', sns: 'jht_service', address: '深圳市南山区聚货通大厦' })
+  push({ ...jht, tab: 'address', isDefault: true, addrType: '到货仓库', name: '深圳总仓', region: [jc], address: '深圳市宝安区物流园A区', contactName: '仓管员' })
+  push({ ...jht, tab: 'setting', settingType: '发货人', contact: '聚货通', company: '聚货通供应链', phone: '0755-88886666', email: 'ship@jht.com', region: [jc], valid: '有效' })
+  push({ ...jht, tab: 'collection', collType: '银行卡', country: jc, currency: 'CNY 人民币', acctNo: '6222001234567890', swiftCode: 'BKCHCNBJ', remark: '对公账户' })
+  push({ ...jht, tab: 'bill', name: '聚货通供应链有限公司', taxId: '91440300000000000X', bank: '中国银行深圳分行', country: jc, currency: 'CNY 人民币', amount: '100万', remark: '' })
+  push({ ...jht, tab: 'file', fileType: 'NVOCC证书', name: 'NVOCC经营资质', code: 'NVOCC00001', des: '无船承运业务经营资格' })
   return rows
 }
 
-const moreResource = createResource('org_more', seed, 2)
+const moreResource = createResource('org_more', seed, 3)
 
 /* ============ CRUD ============ */
 // 按主体 + 标签页拉取子记录列表（不分页，子表数据量小）

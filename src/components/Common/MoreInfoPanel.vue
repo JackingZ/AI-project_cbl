@@ -1,6 +1,6 @@
 <template>
   <PageCard>
-    <template #extra>
+    <template v-if="showBack" #extra>
       <el-button :icon="Back" @click="$emit('back')">返回列表</el-button>
     </template>
     <div class="more-panel__owner">当前主体：<b>{{ owner?.name }}</b></div>
@@ -9,7 +9,7 @@
     </el-tabs>
 
     <div class="more-panel__bar">
-      <el-button type="primary" :icon="Plus" size="small" @click="openAdd">{{ current.addText }}</el-button>
+      <el-button type="primary" :icon="Plus" size="small" :disabled="!can('add')" @click="openAdd">{{ current.addText }}</el-button>
     </div>
 
     <el-table v-loading="loading" :data="list" border stripe style="width: 100%">
@@ -27,9 +27,9 @@
       </el-table-column>
       <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="active === 'address'" link type="primary" size="small" @click="makeDefault(row)">设为默认</el-button>
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+          <el-button v-if="active === 'address'" link type="primary" size="small" :disabled="!can('edit')" @click="makeDefault(row)">设为默认</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
       <template #empty><Empty /></template>
@@ -74,8 +74,10 @@ import {
 
 // 机构“更多”附加信息面板：配置化 6 标签页，客户隐藏收款/开票
 const props = defineProps({
-  ownerType: { type: String, required: true }, // customer | supplier | agent
-  owner: { type: Object, default: null }
+  ownerType: { type: String, required: true }, // customer | supplier | agent | jht
+  owner: { type: Object, default: null },
+  showBack: { type: Boolean, default: true }, // 独立页(如设置)可隐藏“返回列表”
+  can: { type: Function, default: () => true } // 按钮权限判定：can(action) -> boolean
 })
 defineEmits(['back'])
 

@@ -1,55 +1,102 @@
 <template>
   <div>
-    <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="配置项"><el-input v-model="query.name" placeholder="请输入配置项" clearable style="width: 170px" /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px"><el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" /></el-select>
-      </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
-    </SearchBar>
-    <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" /></template>
-        <template #actions="{ row }">
-          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
-        </template>
-      </ProTable>
-    </PageCard>
-    <Modal v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="配置项" prop="name"><el-input v-model="form.name" placeholder="请输入配置项" /></el-form-item>
-        <el-form-item label="键" prop="ckey"><el-input v-model="form.ckey" placeholder="请输入键" /></el-form-item>
-        <el-form-item label="值" prop="cvalue"><el-input v-model="form.cvalue" placeholder="请输入值" /></el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status"><el-radio v-for="s in STATUS_OPTIONS" :key="s" :value="s">{{ s }}</el-radio></el-radio-group>
+    <PageCard title="着陆页配置">
+      <template #extra>
+        <el-button type="primary" :disabled="!can('save')" @click="save">保 存</el-button>
+      </template>
+
+      <el-form :model="form" label-width="120px" class="pc-cfg__form">
+        <el-divider content-position="left">首页导航</el-divider>
+        <el-form-item label="导航 Logo">
+          <ImgUploader v-model="form.navLogo" :disabled="!can('upload')" tip="建议尺寸 70 × 42" />
+        </el-form-item>
+
+        <el-divider content-position="left">首页 Banner（最多 5 张）</el-divider>
+        <el-form-item label="Banner 图组">
+          <div class="pc-cfg__imgs">
+            <ImgUploader
+              v-for="(b, i) in form.banners"
+              :key="i"
+              :model-value="form.banners[i]"
+              :disabled="!can('upload')"
+              tip="建议 448 × 278"
+              @update:model-value="v => (form.banners[i] = v)"
+            />
+          </div>
+        </el-form-item>
+
+        <el-divider content-position="left">底部信息</el-divider>
+        <el-form-item label="底部 Logo">
+          <ImgUploader v-model="form.bottomLogo" :disabled="!can('upload')" tip="建议 148 × 90" />
+        </el-form-item>
+        <el-form-item label="底部二维码 1">
+          <div class="pc-cfg__qr">
+            <el-input v-model="form.qr1Title" placeholder="二维码标题" style="width: 200px" />
+            <ImgUploader v-model="form.qr1Img" :disabled="!can('upload')" tip="建议 192 × 192" />
+          </div>
+        </el-form-item>
+        <el-form-item label="底部二维码 2">
+          <div class="pc-cfg__qr">
+            <el-input v-model="form.qr2Title" placeholder="二维码标题" style="width: 200px" />
+            <ImgUploader v-model="form.qr2Img" :disabled="!can('upload')" tip="建议 192 × 192" />
+          </div>
+        </el-form-item>
+
+        <el-divider content-position="left">联系方式</el-divider>
+        <el-form-item label="联系电话" :error="phoneError">
+          <el-input v-model="form.phone" placeholder="请输入联系电话" style="width: 320px" />
+        </el-form-item>
+        <el-form-item label="工作时间">
+          <el-input v-model="form.workTime" maxlength="50" show-word-limit placeholder="如：周一至周五 9:00-18:00" style="width: 420px" />
         </el-form-item>
       </el-form>
-    </Modal>
+    </PageCard>
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
-import SearchBar from '@/components/Common/SearchBar.vue'
+import { reactive, ref } from 'vue'
 import PageCard from '@/components/Common/PageCard.vue'
-import ProTable from '@/components/Table/ProTable.vue'
-import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
-import { required } from '@/utils/validate'
-import { pcApi, STATUS_OPTIONS } from '@/api/modules/system'
+import ImgUploader from '@/components/Common/ImgUploader.vue'
+import { useActivatedRefresh, usePagePerms } from '@/utils/hooks'
+import { pcApi } from '@/api/modules/system'
 
 defineOptions({ name: 'SysPc' })
-const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(pcApi.list, { name: '', status: '' })
 const { can } = usePagePerms()
-const columns = [
-  { prop: 'name', label: '配置项', minWidth: 160 },
-  { prop: 'ckey', label: '键', width: 150 },
-  { prop: 'cvalue', label: '值', minWidth: 140 },
-  { prop: 'status', label: '状态', width: 90, align: 'center' },
-  { prop: 'createTime', label: '创建时间', width: 170 }
-]
-const rules = { name: [required('请输入配置项')] }
-const defaultForm = () => ({ name: '', ckey: '', cvalue: '', status: '启用' })
-const { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove } = useCrudForm({ api: pcApi, defaultForm, reload: loadData, label: '着陆页配置' })
+
+const form = reactive({
+  navLogo: '', banners: ['', '', '', '', ''], bottomLogo: '',
+  qr1Title: '', qr1Img: '', qr2Title: '', qr2Img: '',
+  phone: '', workTime: ''
+})
+const phoneError = ref('')
+
+const loadData = async () => {
+  const res = await pcApi.res.list()
+  const cfg = res.data[0]
+  if (cfg) {
+    Object.assign(form, cfg)
+    if (!Array.isArray(form.banners)) form.banners = ['', '', '', '', '']
+    while (form.banners.length < 5) form.banners.push('')
+  }
+}
+
+const save = async () => {
+  // 联系电话不能含中文（源校验）
+  phoneError.value = ''
+  if (/[一-龥]/.test(form.phone)) {
+    phoneError.value = '联系电话不能包含中文'
+    return
+  }
+  await pcApi.update(1, { ...form, banners: [...form.banners] })
+  ElMessage.success('着陆页配置已保存')
+}
+
+useActivatedRefresh(loadData)
 </script>
+
+<style scoped lang="scss">
+.pc-cfg__form { max-width: 720px; }
+.pc-cfg__imgs { display: flex; flex-wrap: wrap; gap: $space-md; }
+.pc-cfg__qr { display: flex; align-items: flex-start; gap: $space-md; }
+</style>
