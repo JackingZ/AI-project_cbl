@@ -405,3 +405,26 @@ npm run build 通过。
 - mock 全部按源字段重写,version 升级重建。18 页全接 usePagePerms。npm run build 通过。
 
 **系统管理 18 页全部完成逐字段对齐。** 深交互(报关子CRUD/权限矩阵保存/穿梭/APK上传/审核流)走 demoAction 演示桩(与订单管理既定模式一致)。
+
+---
+
+## 十七、仓库管理 11 页一致性复审与补齐（对齐 workProject2-jht）
+
+11 页审计差异清单存 `agent/plans/warehouse-audit/*.md`(源目录名 warehose-management,拼写少一u)。结论:全 11 页模板通用CRUD骨架(~55行),与源真实仓库作业单据(卸货/计量/拖托/拆柜/调拨/出库,含扫码/明细子表/审核状态机/详情页)系统性错配,普遍大缺漏、0权限、虚构增删改。
+
+### 本轮完成(分批:全页权限+中小页重建,4重页占位后续)
+- **全 11 页接入 usePagePerms** 按钮权限。
+- **7 中小页重建到源模型**(移除虚构增删改,改为源真实操作:查看详情+明细子表/审核/作业,深操作走demoAction):
+  - 卸货 UnloadingApply(卸货类型/司机车牌/预计实际时间/卸货口/16字段详情+签收子表)
+  - 拖托 TrailerTask(任务类型/拖托人/要求完成时间/托盘明细子表+打印托标)
+  - 拆柜 CabinetRemoval(柜号/审核状态0/1/3/拆柜明细+审核弹窗)
+  - 出库 OutputApply(审核状态机0-4/出库类型/服务类型/箱数体积重量/车柜型+审核/完成/导出)
+  - 异常 AnomalyList(所属环节/异常类型/处理三分支 退件/增值/拒绝+批量通知)
+  - 换单 TransferTask(原/新快递单号/扫码换单/文件下载)
+  - 验货 ExamineApply(只读:验货结果/验货员/商品列表+照片)
+- **数据层**:warehouse.js 对应 7 mock 按源字段重写(unload/trailer/removal/output/examine/anomaly/transfer),version→2 重建;新增 UNLOAD_TYPES/TOWAGE_METHODS/REMOVAL_STATUS/OUTPUT_STATUS/ANOMALY_* 等枚举。
+
+### 后续轮次(4 千行重页,整页重建)
+- 仓库配置 warehouse-config(9195行,超重配置页,多tab/子配置)、盘点 inventory-apply(2430)、计量 measure-apply(2042,含明细子表/称重/复核审核流)、调拨 moving-apply(1824,含挑单器/审核状态机)。本轮已接权限,整页业务重建待后续。
+
+深交互(明细录入/扫码/称重/打印/导出/审核流)走 demoAction 演示桩。npm run build 通过。

@@ -8,13 +8,13 @@
       <el-form-item label="状态">
         <el-select v-model="query.taskStatus" placeholder="全部" clearable style="width: 120px"><el-option label="盘点中" value="盘点中" /><el-option label="已完成" value="已完成" /></el-select>
       </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
+      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -39,11 +39,12 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
+import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { inventoryApi } from '@/api/modules/warehouse'
 
 defineOptions({ name: 'WhInventory' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(inventoryApi.list, { applyNo: '', type: '', taskStatus: '' })
 const columns = [
   { prop: 'applyNo', label: '盘点单号', width: 140 },

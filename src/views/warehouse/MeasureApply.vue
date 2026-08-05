@@ -5,13 +5,13 @@
       <el-form-item label="状态">
         <el-select v-model="query.taskStatus" placeholder="全部" clearable style="width: 120px"><el-option label="待计量" value="待计量" /><el-option label="已计量" value="已计量" /></el-select>
       </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
+      <template #actions><el-button type="success" :icon="Plus" :disabled="!can('add')" @click="openAdd">新增</el-button></template>
     </SearchBar>
     <PageCard>
       <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -35,15 +35,16 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
+import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { measureApi } from '@/api/modules/warehouse'
 
 defineOptions({ name: 'WhMeasure' })
+const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(measureApi.list, { applyNo: '', taskStatus: '' })
 const columns = [
   { prop: 'applyNo', label: '计量单号', width: 140 },
-  { prop: 'orderNo', label: '订单号', width: 130 },
+  { prop: 'orderNo', label: '订单号', minWidth: 130 },
   { prop: 'weight', label: '重量(kg)', width: 100, align: 'center' },
   { prop: 'volume', label: '体积(m³)', width: 100, align: 'center' },
   { prop: 'taskStatus', label: '状态', width: 100, align: 'center' },
