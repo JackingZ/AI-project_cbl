@@ -24,7 +24,7 @@
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('view')" @click="openDetail(row)">查看详情</el-button>
           <el-button v-if="[0, 3].includes(row.status)" link type="primary" size="small" :disabled="!can('audit')" @click="openAudit(row)">审核</el-button>
-          <el-button link type="primary" size="small" @click="demoAction('编辑实拆')">编辑实拆</el-button>
+          <el-button v-if="row.status !== 1" link type="primary" size="small" :disabled="!can('edit')" @click="openSplit(row)">编辑实拆</el-button>
         </template>
       </ProTable>
     </PageCard>
@@ -71,6 +71,37 @@
         <el-button type="primary" :loading="audit.loading" @click="submitAudit">确 认</el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑实拆（逐行录实拆件数/托盘ID，保存自动汇总实拆件数+托盘数，落库） -->
+    <el-dialog v-model="split.visible" title="编辑实拆" width="820px">
+      <div class="detail-subtitle">拆柜明细（录入实拆结果）</div>
+      <el-table :data="split.rows" border size="small" style="width: 100%">
+        <el-table-column type="index" label="序号" width="60" align="center" />
+        <el-table-column prop="originalNo" label="原单号" min-width="130" />
+        <el-table-column prop="packages" label="件数" width="80" align="center" />
+        <el-table-column label="实拆件数" width="130" align="center">
+          <template #default="{ row }">
+            <el-input-number v-model="row.actualPackages" :controls="false" :min="0" :max="99999" size="small" style="width: 100px" />
+          </template>
+        </el-table-column>
+        <el-table-column label="托盘ID" width="160">
+          <template #default="{ row }"><el-input v-model="row.palletNo" size="small" placeholder="托盘ID" /></template>
+        </el-table-column>
+        <el-table-column label="货物状态" width="120" align="center">
+          <template #default="{ row }">
+            <el-select v-model="row.goodsStatus" size="small" style="width: 100px">
+              <el-option label="正常" value="正常" />
+              <el-option label="破损" value="破损" />
+              <el-option label="缺失" value="缺失" />
+            </el-select>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="split.visible = false">取 消</el-button>
+        <el-button type="primary" :loading="split.loading" @click="submitSplit">保 存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -80,7 +111,6 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
-import { demoAction } from '@/utils'
 import { removalApi, REMOVAL_STATUS } from '@/api/modules/warehouse'
 
 defineOptions({ name: 'WhRemoval' })
@@ -101,6 +131,28 @@ const statusTag = s => ({ 0: 'info', 1: 'success', 3: 'warning' }[s] || 'info')
 
 const detail = reactive({ visible: false, row: {} })
 const openDetail = row => { detail.row = row; detail.visible = true }
+
+// 编辑实拆：逐行录实拆件数/托盘,保存自动汇总,落库
+const split = reactive({ visible: false, loading: false, id: null, rows: [] })
+const openSplit = row => {
+  split.id = row.id
+  split.rows = (row.items || []).map(it => ({ ...it, actualPackages: it.actualPackages ?? it.packages, palletNo: it.palletNo || '', goodsStatus: it.goodsStatus || '正常' }))
+  split.visible = true
+}
+const submitSplit = async () => {
+  split.loading = true
+  try {
+    const rows = split.rows.map(it => ({ ...it, actualPackages: Number(it.actualPackages) || 0 }))
+    const actualPackages = rows.reduce((a, it) => a + it.actualPackages, 0)
+    const palletCount = new Set(rows.map(it => it.palletNo).filter(Boolean)).size
+    await removalApi.update(split.id, { items: rows, actualPackages, palletCount })
+    ElMessage.success('实拆结果已保存')
+    split.visible = false
+    loadData()
+  } finally {
+    split.loading = false
+  }
+}
 
 const audit = reactive({ visible: false, loading: false, id: null, result: 1, remark: '' })
 const openAudit = row => { Object.assign(audit, { visible: true, id: row.id, result: 1, remark: '' }) }

@@ -92,11 +92,33 @@
         <!-- 一件代发条件区块（包装/仓储/尺寸/重量等）依赖多租户与仓配流程，占位省略 -->
       </el-form>
     </Modal>
+
+    <!-- 报关信息二级 CRUD（国家/HS编码/税率/申报品名 动态行） -->
+    <Modal v-model="decl.visible" title="报关信息" width="820px" :confirm-loading="decl.loading" @confirm="saveDeclaration">
+      <div class="decl-list">
+        <div class="decl-row decl-row--head">
+          <span>国家/地区</span><span>HS编码</span><span>税率</span><span>申报品名</span><span>操作</span>
+        </div>
+        <div v-for="(d, i) in decl.rows" :key="i" class="decl-row">
+          <el-select v-model="d.countryName" placeholder="国家" filterable>
+            <el-option v-for="c in COUNTRIES" :key="c" :label="c" :value="c" />
+          </el-select>
+          <el-input v-model="d.hsCode" :maxlength="20" placeholder="HS编码" />
+          <el-input v-model="d.taxRate" :maxlength="10" placeholder="税率" />
+          <el-input v-model="d.declareName" :maxlength="100" placeholder="申报品名" />
+          <div class="decl-row__ops">
+            <el-icon v-if="i === 0" class="decl-icon decl-icon--add" @click="addDecl"><CirclePlus /></el-icon>
+            <el-icon v-else class="decl-icon decl-icon--del" @click="decl.rows.splice(i, 1)"><Remove /></el-icon>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script setup>
-import { Plus, Close } from '@element-plus/icons-vue'
+import { reactive } from 'vue'
+import { Plus, Close, CirclePlus, Remove } from '@element-plus/icons-vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
@@ -105,7 +127,6 @@ import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required, noChineseRule } from '@/utils/validate'
 import { productApi, PRODUCT_STATE, PRODUCT_CATEGORIES, MEASURE_UNIT_NAMES } from '@/api/modules/system'
 import { COUNTRIES } from '@/api/modules/orderlist'
-import { demoAction } from '@/utils/index'
 
 defineOptions({ name: 'SysProduct' })
 const STATE_TAG = ['info', 'success', 'danger']
@@ -164,8 +185,27 @@ const beforeStatusChange = row => {
   })
 }
 
-// 报关信息二级 CRUD（含上传/税率等深流程）占位
-const onDeclaration = () => demoAction('报关信息')
+// 报关信息二级 CRUD
+const decl = reactive({ visible: false, loading: false, id: null, rows: [] })
+const emptyDecl = () => ({ countryName: '', hsCode: '', taxRate: '', declareName: '' })
+const onDeclaration = row => {
+  decl.id = row.id
+  decl.rows = (row.declarations && row.declarations.length) ? row.declarations.map(d => ({ ...d })) : [emptyDecl()]
+  decl.visible = true
+}
+const addDecl = () => decl.rows.push(emptyDecl())
+const saveDeclaration = async () => {
+  const valid = decl.rows.filter(d => d.countryName && d.hsCode)
+  decl.loading = true
+  try {
+    await productApi.update(decl.id, { declarations: valid })
+    ElMessage.success('报关信息已保存')
+    decl.visible = false
+    loadData()
+  } finally {
+    decl.loading = false
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -185,4 +225,16 @@ const onDeclaration = () => demoAction('报关信息')
     gap: 4px; border: 1px dashed var(--el-border-color); border-radius: $radius-base; color: $text-secondary; cursor: pointer;
   }
 }
+.decl-list { display: flex; flex-direction: column; gap: $space-sm; }
+.decl-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr 1.5fr 60px;
+  gap: $space-sm;
+  align-items: center;
+  &--head { color: $text-secondary; font-size: $font-sm; }
+  &__ops { display: flex; justify-content: center; }
+}
+.decl-icon { font-size: 20px; cursor: pointer; }
+.decl-icon--add { color: var(--el-color-primary); }
+.decl-icon--del { color: var(--el-color-danger); }
 </style>

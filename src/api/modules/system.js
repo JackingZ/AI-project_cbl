@@ -117,8 +117,9 @@ export const productApi = defineMock('sys_product', () =>
     cnPurpose: at(['家用', '办公', '运动', '户外'], i), enPurpose: at(['Home', 'Office', 'Sports', 'Outdoor'], i),
     unitName: at(MEASURE_UNIT_NAMES, i), title: at(PRODUCT_CATEGORIES, i),
     status: i % 5 === 0 ? 1 : 0, // 0启用/1禁用（源反常）
+    declarations: [{ countryName: at(['美国', '德国', '日本'], i), hsCode: `${8500 + i}00`, taxRate: `${(i % 15) + 1}%`, declareName: at(EN_PROD, i) }],
     createTime: seedTime(i)
-  })), [], 3)
+  })), [], 4)
 // 产品库按 状态 state / 关键词(SKU/中文名/英文名) 过滤
 productApi.list = (p = {}) => productApi.res.query(o => {
   const stateOk = p.state == null || p.state === '' || o.state === p.state
@@ -168,7 +169,7 @@ export const pdaApi = defineMock('sys_pda', () =>
     uploaded: at(PDA_FORCE, i),
     status: i === 0 ? '上线' : '下线', // 唯一线上版
     createTime: seedTime(i)
-  })), [], 3)
+  })), [], 4)
 // PDA 版本按发布时间区间(dateRange=[start,end])过滤，按发布时间倒序
 pdaApi.list = (p = {}) => pdaApi.res.query(o =>
   (!p.dateRange || !p.dateRange.length ||
@@ -208,9 +209,12 @@ export const subscribeApi = defineMock('sys_subscribe', () =>
     email: `sub${i + 1}@jht.com`,
     bySms: i % 2 === 0, byWechat: i % 3 === 0, byEmail: true,
     plan: i % 2 === 0, loaded: i % 3 === 0, cost: i % 2 === 1,
-    flightCount: i % 5, storeCount: i % 4,
+    flightIds: [], storeIds: [],
     createTime: seedTime(i)
-  })), ['name'], 3)
+  })), ['name'], 4)
+// 订阅航线/仓库 候选（穿梭框数据源）
+export const SUB_FLIGHTS = ['中美空运专线', '中欧海运专线', '中日铁路专线', '中英卡航专线', '中澳空运专线', '东南亚海运专线']
+export const SUB_STORES = ['洛杉矶FBA仓', '汉堡FBA仓', '东京FBA仓', '伦敦FBA仓', '悉尼FBA仓', '深圳中转仓']
 subscribeApi.list = (p = {}) => subscribeApi.res.query(o => {
   const kwOk = !p.keyword ||
     (p.selectType === '1' && String(o.name).includes(p.keyword)) ||

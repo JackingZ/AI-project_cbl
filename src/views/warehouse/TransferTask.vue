@@ -33,16 +33,29 @@
       </el-descriptions>
       <template #footer><el-button type="primary" @click="detail.visible = false">关闭</el-button></template>
     </Modal>
+
+    <!-- 扫码换单：录入新快递单号，落库 newTrackingNo + 状态已换单 -->
+    <Modal v-model="swap.visible" title="扫码换单" width="520px" :confirm-loading="swap.loading" @confirm="submitSwap">
+      <el-form ref="swapRef" :model="swapForm" :rules="swapRules" label-width="110px">
+        <el-form-item label="原单号">{{ swap.row.originalNo }}</el-form-item>
+        <el-form-item label="原快递单号">{{ swap.row.oldTrackingNo }}</el-form-item>
+        <el-form-item label="新快递单号" prop="newTrackingNo">
+          <el-input v-model="swapForm.newTrackingNo" :maxlength="40" placeholder="扫描或输入新快递单号" clearable />
+        </el-form-item>
+      </el-form>
+    </Modal>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { required } from '@/utils/validate'
+import { formatTime } from '@/utils/format'
 import { demoAction } from '@/utils'
 import { transferApi } from '@/api/modules/warehouse'
 
@@ -67,5 +80,27 @@ const columns = [
 const detail = reactive({ visible: false, row: null })
 const openDetail = row => { detail.row = row; detail.visible = true }
 
-const handleTransfer = () => demoAction('扫码换单')
+// 扫码换单：录新快递单号,落库 newTrackingNo + 状态已换单 + 换单时间
+const swapRef = ref(null)
+const swap = reactive({ visible: false, loading: false, row: {} })
+const swapForm = reactive({ newTrackingNo: '' })
+const swapRules = { newTrackingNo: [required('请输入新快递单号')] }
+const handleTransfer = row => {
+  swap.row = row
+  swapForm.newTrackingNo = ''
+  swap.visible = true
+  swapRef.value?.clearValidate()
+}
+const submitSwap = async () => {
+  await swapRef.value.validate()
+  swap.loading = true
+  try {
+    await transferApi.update(swap.row.id, { newTrackingNo: swapForm.newTrackingNo, status: '已换单', transferTime: formatTime(new Date()) })
+    ElMessage.success('换单成功')
+    swap.visible = false
+    loadData()
+  } finally {
+    swap.loading = false
+  }
+}
 </script>

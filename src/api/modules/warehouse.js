@@ -36,8 +36,25 @@ export const unloadApi = defineMock('wh_unload', () =>
     createTime: seedTime(i)
   })), ['unloadNo~', 'unloadType', 'unloadStatus'], 2)
 
+// 计量申请：对齐源(计量单号/原单号/仓库/审核状态机0-4/总票件/计量员/复核/计量明细子表)
+export const MEASURE_STATUS = { 0: '待计量', 1: '计量中', 2: '已计量', 3: '复核中', 4: '已完成' }
 export const measureApi = defineMock('wh_measure', () =>
-  Array.from({ length: 14 }, (_, i) => ({ id: i + 1, applyNo: `JL${100000 + i}`, orderNo: order(i), weight: (i % 50) + 10, volume: Number(((i % 20) / 2 + 1).toFixed(2)), taskStatus: i % 2 ? '已计量' : '待计量', createTime: seedTime(i) })), ['applyNo~', 'taskStatus'])
+  Array.from({ length: 14 }, (_, i) => ({
+    id: i + 1,
+    measureNo: `JL${100000 + i}`,
+    originalNo: order(i),
+    warehouseName: wh(i),
+    status: [0, 1, 2, 3, 4][i % 5],
+    totalNumber: (i % 8) + 1,
+    totalWeight: (i % 50) + 10,
+    totalVolume: Number(((i % 20) / 2 + 1).toFixed(2)),
+    executorName: `计量员${pad(i + 1)}`,
+    reviewerName: i % 3 === 0 ? `复核员${pad(i + 1)}` : '',
+    items: [
+      { boxNo: `BX${1000 + i}`, length: 40 + i, width: 30 + i, height: 20 + i, weight: (i % 20) + 5, volume: Number((((40 + i) * (30 + i) * (20 + i)) / 1e6).toFixed(3)) }
+    ],
+    createTime: seedTime(i)
+  })), ['measureNo~', 'status'], 2)
 
 // 拖托任务：对齐源(任务类型 入库/出库/移库/计量拖托、拖托人、要求完成时间、3态、托盘明细子表)。源无增删改,仅查看/打印托标
 export const TOWAGE_METHODS = ['入库', '出库', '移库', '计量拖托']
@@ -76,8 +93,24 @@ export const removalApi = defineMock('wh_removal', () =>
     createTime: seedTime(i)
   })), ['cabinetNo~'], 2)
 
+// 调拨申请：对齐源(调拨单号/调出仓/调入仓/审核状态机0待审3审核中1通过2拒绝4已签收/总票数/申请人/审核人/明细挑单子表)
+export const MOVING_STATUS = { 0: '待审核', 3: '审核中', 1: '已通过', 2: '已拒绝', 4: '已签收' }
 export const movingApi = defineMock('wh_moving', () =>
-  Array.from({ length: 12 }, (_, i) => ({ id: i + 1, applyNo: `DB${100000 + i}`, fromWh: wh(i), toWh: wh(i + 1), taskStatus: i % 2 ? '已调拨' : '待调拨', createTime: seedTime(i) })), ['applyNo~', 'taskStatus'])
+  Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    movingNo: `DB${100000 + i}`,
+    fromWh: wh(i), toWh: wh(i + 1),
+    status: [0, 3, 1, 2, 4][i % 5],
+    totalNumber: (i % 10) + 1,
+    applicant: `申请人${pad(i + 1)}`,
+    auditor: i % 3 === 0 ? `审核人${pad(i + 1)}` : '',
+    auditTime: i % 3 === 0 ? seedTime(i) : '',
+    remark: '',
+    items: [
+      { originalNo: order(i), targetWh: wh(i + 1), measureStatus: at(['待计量', '已计量'], i), examineStatus: at(['待验货', '已验货'], i) }
+    ],
+    createTime: seedTime(i)
+  })), ['movingNo~', 'status'], 2)
 
 // 出库申请：源由订单流生成,不可手工增删改。审核状态机(0待审/3审核中/1通过/2拒绝/4已完成)+出库类型/服务类型/总箱数体积重量/车柜型/操作人申请人/装载时间
 export const OUTPUT_STATUS = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '审核中', 4: '已完成' }
@@ -98,8 +131,23 @@ export const outputApi = defineMock('wh_output', () =>
     createTime: seedTime(i)
   })), ['outputNo~', 'outputType'], 2)
 
+// 盘点申请：对齐源(盘点单号/仓库/状态/理论vs实盘 票件托/库存锁/盘点员/盘点明细子表)
+export const INVENTORY_STATUS = { 0: '待盘点', 1: '盘点中', 2: '已完成', 3: '已取消' }
 export const inventoryApi = defineMock('wh_inventory', () =>
-  Array.from({ length: 12 }, (_, i) => ({ id: i + 1, applyNo: `PD${100000 + i}`, warehouse: wh(i), type: i % 2 ? '抽盘' : '全盘', taskStatus: i % 2 ? '已完成' : '盘点中', createTime: seedTime(i) })), ['applyNo~', 'type', 'taskStatus'])
+  Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    inventoryNo: `PD${100000 + i}`,
+    warehouseName: wh(i),
+    status: [0, 1, 2, 3][i % 4],
+    theoryOrder: (i % 10) + 5, theoryNumber: (i % 20) + 10, theoryPallet: (i % 5) + 1,
+    actualOrder: (i % 10) + 5, actualNumber: (i % 20) + 9, actualPallet: (i % 5) + 1,
+    locked: i % 2 === 0,
+    executorName: `盘点员${pad(i + 1)}`,
+    items: [
+      { originalNo: order(i), theoryNum: (i % 8) + 1, actualNum: (i % 8) + 1, diff: 0, location: `${at(['A', 'B', 'C'], i)}${(i % 9) + 1}区` }
+    ],
+    createTime: seedTime(i)
+  })), ['inventoryNo~', 'status'], 2)
 
 // 验货申请：源为验货单查看(列表只读)，含验货方式/验货结果/验货员/商品明细/验货照片
 export const EXAMINE_RESULT = ['合格', '不合格']
@@ -153,5 +201,28 @@ export const transferApi = defineMock('wh_transfer', () =>
     createTime: seedTime(i)
   })), ['originalNo~', 'status'], 2)
 
+// 仓库配置：对齐源(名称/国家地区/州省市区/邮编/地址/入库限重+单位/卸货平台·叉车·监管仓·中转仓 布尔/状态)
+export const WEIGHT_UNITS = ['KG', 'T', 'LB']
+const CFG_REGION = [
+  { c: '美国', s: '加利福尼亚州', ci: '洛杉矶' }, { c: '德国', s: '黑森', ci: '法兰克福' },
+  { c: '日本', s: '东京都', ci: '新宿' }, { c: '英国', s: '英格兰', ci: '伦敦' }
+]
 export const configApi = defineMock('wh_config', () =>
-  Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: wh(i) + pad(i + 1), code: `WH${1000 + i}`, address: `${wh(i)}地址${pad(i + 1)}`, manager: `负责人${pad(i + 1)}`, status: i % 5 === 0 ? '禁用' : '启用', createTime: seedTime(i) })), ['name', 'status'])
+  Array.from({ length: 8 }, (_, i) => {
+    const r = CFG_REGION[i % CFG_REGION.length]
+    return {
+      id: i + 1,
+      name: wh(i) + pad(i + 1),
+      code: `WH${1000 + i}`,
+      countryName: r.c, stateName: r.s, cityName: r.ci,
+      postal: `${100000 + i * 137}`.slice(0, 6),
+      address: `${r.ci}${at(['中心路', '港区路', '物流大道'], i)}${i + 1}号`,
+      weight: (i % 5 + 1) * 500, unitOfWeight: 'KG',
+      unloading: i % 2 === 0 ? 1 : 0,   // 卸货平台
+      forklift: i % 2 === 1 ? 1 : 0,    // 叉车
+      supervise: i % 3 === 0 ? 1 : 0,   // 监管仓
+      transfer: i % 3 === 1 ? 1 : 0,    // 中转仓
+      status: i % 5 === 0 ? '0' : '1',
+      createTime: seedTime(i)
+    }
+  }), ['name'], 2)

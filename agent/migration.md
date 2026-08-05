@@ -428,3 +428,23 @@ npm run build 通过。
 - 仓库配置 warehouse-config(9195行,超重配置页,多tab/子配置)、盘点 inventory-apply(2430)、计量 measure-apply(2042,含明细子表/称重/复核审核流)、调拨 moving-apply(1824,含挑单器/审核状态机)。本轮已接权限,整页业务重建待后续。
 
 深交互(明细录入/扫码/称重/打印/导出/审核流)走 demoAction 演示桩。npm run build 通过。
+
+---
+
+## 十八、系统管理深交互桩补齐 + 仓库管理 4 重页重建
+
+### 系统管理 6 页深交互(demoAction桩→真实功能)
+- 发货计划:新增/编辑弹窗(落库)+生成订舱(改 ifBooking=1)。
+- 产品库:报关信息二级CRUD(国家/HS编码/税率/申报品名动态行,落库 declarations,productApi version→4)。
+- 商品审核:审核(通过state=1/拒绝state=2落库)+定义价格(ifPrice=1+price落库)+查看详情弹窗。
+- 航空号段:分配号段(增 total/surplus落库)+查看明细弹窗。
+- 保留占位(无对应mock数据/依赖文件系统):商品审核 认证文件/查看客户、航空号段 导入/操作日志。
+
+### 仓库管理 4 千行重页重建(列表+审核状态机+详情子表做实,超深子流程占位)
+- 计量 MeasureApply:审核状态机0-4 + 计量明细子表(箱号/长宽高/重量/体积) + 完成计量/复核;逐箱称重录入 demoAction。
+- 盘点 InventoryApply:理论vs实盘对比(票/件/托) + 盘点明细子表(理论/实盘/差异/库位) + 完成/取消;任务分配/实盘录入 demoAction。
+- 调拨 MovingApply:审核状态机(0待审/3审核中/1通过/2拒绝/4签收) + 调拨明细子表 + 新增/编辑/审核/取消/导出;明细挑单器 demoAction。
+- 仓库配置 WarehouseConfig:主列表增删改+状态开关做实;8子配置tab/设置服务 demoAction 占位。
+- 数据层 warehouse.js:measure/moving/inventory mock 按源字段重写(含审核状态机+明细子表),version 升级;新增 MEASURE_STATUS/MOVING_STATUS/INVENTORY_STATUS 枚举。
+
+npm run build 通过。至此仓库管理 11 页全部重建到源模型;系统管理深交互补齐(除文件/日志类占位)。

@@ -56,6 +56,17 @@
         </el-form-item>
       </el-form>
     </Modal>
+
+    <!-- 订阅航线/仓库 穿梭弹窗（行级/批量共用） -->
+    <Modal v-model="sub.visible" :title="sub.title" width="640px" :confirm-loading="sub.loading" @confirm="submitSub">
+      <div class="sub-tip">{{ sub.batch ? `批量应用到全部订阅人（${total} 人）` : `订阅人：${sub.row.name}` }}</div>
+      <el-transfer
+        v-model="sub.selected"
+        :data="sub.options"
+        :titles="[sub.kind === 'flight' ? '可选航线' : '可选仓库', '已订阅']"
+        filterable
+      />
+    </Modal>
   </div>
 </template>
 
@@ -68,8 +79,8 @@ import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
 import { required, phoneRule, emailRule } from '@/utils/validate'
-import { confirmDelete, demoAction } from '@/utils/index'
-import { subscribeApi } from '@/api/modules/system'
+import { confirmDelete } from '@/utils/index'
+import { subscribeApi, SUB_FLIGHTS, SUB_STORES } from '@/api/modules/system'
 
 defineOptions({ name: 'SysSubscribe' })
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(subscribeApi.list, { keyword: '', selectType: '1' })
@@ -149,9 +160,43 @@ const remove = row => confirmDelete(async () => {
   loadData()
 }, '确定删除该订阅人吗？')
 
-// 穿梭框深交互（订阅航线/仓库、批量订阅）走占位
-const subFlight = () => demoAction('订阅航线')
-const subStore = () => demoAction('订阅仓库')
-const batchFlight = () => demoAction('批量订阅航线')
-const batchStore = () => demoAction('批量订阅仓库')
+// 订阅航线/仓库穿梭（行级/批量共用）
+const sub = reactive({ visible: false, loading: false, batch: false, kind: 'flight', title: '', row: {}, options: [], selected: [] })
+const optionsOf = kind => (kind === 'flight' ? SUB_FLIGHTS : SUB_STORES).map(v => ({ key: v, label: v }))
+const openSub = (kind, row) => {
+  sub.kind = kind
+  sub.batch = !row
+  sub.row = row || {}
+  sub.options = optionsOf(kind)
+  sub.selected = row ? [...(row[kind === 'flight' ? 'flightIds' : 'storeIds'] || [])] : []
+  sub.title = (row ? '订阅' : '批量订阅') + (kind === 'flight' ? '航线' : '仓库')
+  sub.visible = true
+}
+const subFlight = row => openSub('flight', row)
+const subStore = row => openSub('store', row)
+const batchFlight = () => openSub('flight', null)
+const batchStore = () => openSub('store', null)
+const submitSub = async () => {
+  sub.loading = true
+  try {
+    const field = sub.kind === 'flight' ? 'flightIds' : 'storeIds'
+    if (sub.batch) {
+      // 批量：应用到全部订阅人
+      const all = list.value
+      await Promise.all(all.map(r => subscribeApi.update(r.id, { [field]: [...sub.selected] })))
+      ElMessage.success('批量订阅已保存')
+    } else {
+      await subscribeApi.update(sub.row.id, { [field]: [...sub.selected] })
+      ElMessage.success('订阅已保存')
+    }
+    sub.visible = false
+    loadData()
+  } finally {
+    sub.loading = false
+  }
+}
 </script>
+
+<style scoped lang="scss">
+.sub-tip { margin-bottom: 12px; color: $text-secondary; font-size: $font-sm; }
+</style>

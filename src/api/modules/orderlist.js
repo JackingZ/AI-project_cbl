@@ -43,7 +43,19 @@ export const FBA_WAREHOUSES = ['ONT8', 'LAX9', 'JFK8', 'FRA3', 'NRT5']
 export const TOP_AGENTS = ['聚货通总部', '华南一级代理', '华东一级代理']
 export const SERVICE_TERMS = ['CIF', 'FOB', 'EXW', 'DDP', 'DDU']
 export const GOODS_CLAUSES = ['电放', '正本', 'HBL', 'MBL']
-export const SCHEDULE_STATUS = ['待调度', '调度中', '已完成', '已取消']
+// 调度任务订单状态（对齐源 allocationCat statusList）
+export const SCHEDULE_STATUS = [
+  { id: '0', name: '待分配' },
+  { id: '3', name: '司机取消订单' },
+  { id: '60', name: '完成调度' }
+]
+// 提货方式（对齐源 allocationCat delivery）
+export const SCHEDULE_DELIVERY = [
+  { id: '0', name: '自主送货' },
+  { id: '1', name: '上门提货' },
+  { id: '2', name: '快递发货' },
+  { id: '3', name: '整柜直装' }
+]
 export const FLEETS = ['自营车队', '合作车队A', '合作车队B']
 // 各页专属枚举（对齐源，替换此前误用的通用常量）
 export const TRANSPORT_TYPES = ['空运', '海运', '铁路', '卡航']            // 全程/签收 业务类型(运输方式)
@@ -163,18 +175,26 @@ const orderResource = createResource('orderlist', () =>
   }), 3
 )
 
-/* ============ 调度任务单（卡派派生） ============ */
+/* ============ 调度任务单（源 allocationCat：卡派订单调度视图，按订单维度） ============ */
+const SCH_STATUS_IDS = ['0', '3', '60']
+const SCH_DELIVERY_IDS = ['0', '1', '2', '3']
 const scheduleResource = createResource('schedule-tasks', () =>
   Array.from({ length: 24 }, (_, i) => ({
     id: i + 1,
-    taskNo: `DD${pad((i % 12) + 1)}${String(1000 + i).slice(0, 4)}`,
-    fleet: at(FLEETS, i),
-    driverName: `司机${pad((i % 15) + 1)}`,
-    cardId: `粤B${String(10000 + i * 137).slice(0, 5)}`,
-    status: at(SCHEDULE_STATUS, i),
-    orderCount: (i % 6) + 1,
-    createTime: `2024-${pad((i % 12) + 1)}-${pad((i % 27) + 1)} ${pad((i % 12) + 8)}:15:00`
-  })), 1
+    code: `KP${100000 + i * 137}`,                          // 原单号
+    status: SCH_STATUS_IDS[i % 3],                          // 订单状态(0待分配/3司机取消/60完成调度)
+    createTime: `2024-${pad((i % 12) + 1)}-${pad((i % 27) + 1)} ${pad((i % 12) + 8)}:15:00`, // 下单时间
+    businessType: '卡派',                                    // 业务类型
+    orderCustomerName: `下单客户${pad((i % 12) + 1)}`,       // 下单客户
+    customerName: `${at(COUNTRIES, i)}${pad(i + 1)}贸易`,   // 客户名称
+    deliveryWay: SCH_DELIVERY_IDS[i % 4],                    // 提货方式
+    pickTime: `2024-${pad((i % 12) + 1)}-${pad((i % 27) + 1)}`, // 提货日期
+    destinationCountry: at(COUNTRIES, i),                    // 目的地
+    planTime: `2024-${pad((i % 12) + 1)}-${pad(((i + 5) % 27) + 1)}`, // 送货日期
+    remark: '',
+    // 分配车辆信息(分配后回填)
+    fleet: '', driverName: '', driverPhone: '', cardId: ''
+  })), 2
 )
 
 /* ============ 查询 ============ */
@@ -254,14 +274,22 @@ export function getCustomsCabinets(p = {}) {
 }
 
 // 调度任务单
+// 调度任务查询（源 allocationCat：按订单状态/目的地/原单号筛选）
 export function getScheduleTasks(p = {}) {
   return scheduleResource.query(
-    t => kw(t.taskNo, p.keyword) && (!p.status || t.status === p.status),
+    t => kw(t.code, p.keyword) &&
+      (!p.status || t.status === p.status) &&
+      (!p.destinationCountry || t.destinationCountry === p.destinationCountry),
     paged(p)
   )
 }
-export function addScheduleTask(data) {
-  return scheduleResource.add({ status: '待调度', orderCount: 0, ...data })
+// 分配车辆（源 showModal：回填车队/司机/车牌，状态→待分配保持，供调度）
+export function assignScheduleCar(id, data) {
+  return scheduleResource.update(id, { ...data })
+}
+// 完成调度（源 taskComplete：状态→60 完成调度）
+export function completeSchedule(id) {
+  return scheduleResource.update(id, { status: '60' })
 }
 
 export function getOrderDetail(id) {
