@@ -37,7 +37,7 @@ export const airApi = defineMock('sys_air', () =>
       total, surplus: total - allocated, allocated, printedOrder, shipped,
       createTime: seedTime(i)
     }
-  }), ['airlineCompany'], 2)
+  }), ['airlineCompany'], 3)
 
 // 司机管理：对齐源(姓名/证件类型+号码/手机/邮箱/所在地区/驾照日期/驾照照片/状态)
 export const CERT_TYPES = ['身份证', '护照', '港澳通行证', '其他']
@@ -54,7 +54,7 @@ export const driverApi = defineMock('sys_driver', () =>
       photo: '', overtime: i % 2 === 0 ? '是' : '否', distance: i % 3 === 0 ? '是' : '否',
       status: st(i), createTime: seedTime(i)
     }
-  }), ['name', 'status'], 2)
+  }), ['name', 'status'], 3)
 function pick3(i) { return ['110', '310', '440'][i % 3] }
 
 // 车辆管理：对齐源(车牌/关联车型/车况/保险到期/三者险保额/尾板/GPS/上牌时间/状态)
@@ -68,7 +68,14 @@ export const carApi = defineMock('sys_car', () =>
     tailBoard: i % 2 === 0 ? '有' : '无', gps: i % 2 === 0 ? '有' : '无',
     regDate: `20${pad(18 + (i % 6))}-${pad((i % 12) + 1)}-10`,
     status: st(i), createTime: seedTime(i)
-  })), ['plateNo~', 'vehicleType', 'status'], 2)
+  })), ['plateNo~', 'vehicleType', 'status'], 3)
+
+// 商品/产品 共用枚举与双语示例数据（须定义在 commodityApi/productApi 之前，避免 const 暂时性死区）
+export const PRODUCT_STATE = ['待审核', '审核通过', '审核拒绝']
+export const PRODUCT_CATEGORIES = ['普货', '纯电', '带电', '带磁', '危险品']
+export const MEASURE_UNIT_NAMES = ['个', '件', '套', '台', '箱']
+const CN_PROD = ['蓝牙耳机', '保温杯', '瑜伽垫', '数据线', 'LED灯', '积木玩具', '手机壳', '登山包']
+const EN_PROD = ['Bluetooth Earphone', 'Vacuum Cup', 'Yoga Mat', 'Data Cable', 'LED Light', 'Building Blocks', 'Phone Case', 'Hiking Bag']
 
 // 商品审核：源为审核台账(审核状态 state 0/1/2、起运国/目的国、海关编码、双语名/材质/用途、品牌规格、计量单位、类别、价格是否配置 ifPrice)
 export const commodityApi = defineMock('sys_commodity', () =>
@@ -85,7 +92,7 @@ export const commodityApi = defineMock('sys_commodity', () =>
     unitName: at(MEASURE_UNIT_NAMES, i), title: at(PRODUCT_CATEGORIES, i),
     ifPrice: i % 2, // 0未配置/1已配置
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 // 商品审核按 目的国/审核状态/关键词(海关编码/中文名/英文名) 过滤
 commodityApi.list = (p = {}) => commodityApi.res.query(o => {
   const countryOk = !p.countryName || o.countryName === p.countryName
@@ -99,11 +106,6 @@ commodityApi.list = (p = {}) => commodityApi.res.query(o => {
 }, { page: p.page || 1, size: p.size || 10 })
 
 // 产品库：对齐源(审核状态state 0/1/2、SKU、双语名/材质/用途、品牌规格、计量单位、商品类别、报关信息、状态 0启1禁)
-export const PRODUCT_STATE = ['待审核', '审核通过', '审核拒绝']
-export const PRODUCT_CATEGORIES = ['普货', '纯电', '带电', '带磁', '危险品']
-export const MEASURE_UNIT_NAMES = ['个', '件', '套', '台', '箱']
-const CN_PROD = ['蓝牙耳机', '保温杯', '瑜伽垫', '数据线', 'LED灯', '积木玩具', '手机壳', '登山包']
-const EN_PROD = ['Bluetooth Earphone', 'Vacuum Cup', 'Yoga Mat', 'Data Cable', 'LED Light', 'Building Blocks', 'Phone Case', 'Hiking Bag']
 export const productApi = defineMock('sys_product', () =>
   Array.from({ length: 14 }, (_, i) => ({
     id: i + 1,
@@ -116,7 +118,7 @@ export const productApi = defineMock('sys_product', () =>
     unitName: at(MEASURE_UNIT_NAMES, i), title: at(PRODUCT_CATEGORIES, i),
     status: i % 5 === 0 ? 1 : 0, // 0启用/1禁用（源反常）
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 // 产品库按 状态 state / 关键词(SKU/中文名/英文名) 过滤
 productApi.list = (p = {}) => productApi.res.query(o => {
   const stateOk = p.state == null || p.state === '' || o.state === p.state
@@ -138,7 +140,7 @@ export const commissionApi = defineMock('sys_commission', () =>
     sections: [{ lower: 0, upper: (i % 5 + 1) * 100, amount: (i % 10 + 1) * 2 }],
     version: `v${(i % 3) + 1}.0`,
     createTime: seedTime(i)
-  })), ['name'], 2)
+  })), ['name'], 3)
 
 // 着陆页配置：源为「官网首页」单表单——导航logo/banner图组/底部logo/底部二维码 + 联系电话 + 工作时间，整份保存
 // 存单条配置记录(id=1)，页面读取 res.raw()[0]，保存走 update
@@ -152,7 +154,7 @@ export const pcApi = defineMock('sys_pc', () => ([{
   phone: '400-888-8888',
   workTime: '周一至周五 9:00-18:00',
   createTime: seedTime(0)
-}]), [], 2)
+}]), [], 3)
 
 // PDA配置：源实为「PDA App 版本管理」——版本号/更新日志(富文本)/apk上传/强制更新/上下线开关(唯一线上)
 export const PDA_FORCE = ['是', '否']
@@ -166,7 +168,7 @@ export const pdaApi = defineMock('sys_pda', () =>
     uploaded: at(PDA_FORCE, i),
     status: i === 0 ? '上线' : '下线', // 唯一线上版
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 // PDA 版本按发布时间区间(dateRange=[start,end])过滤，按发布时间倒序
 pdaApi.list = (p = {}) => pdaApi.res.query(o =>
   (!p.dateRange || !p.dateRange.length ||
@@ -190,7 +192,7 @@ export const deliveryApi = defineMock('sys_delivery', () =>
     createUser: `操作员${pad(i + 1)}`, createDept: at(['运营部', '客服部', '仓储部'], i),
     ifBooking: i % 2,
     createTime: seedTime(i)
-  })), ['bscName'], 2)
+  })), ['bscName'], 3)
 deliveryApi.list = (p = {}) => deliveryApi.res.query(o =>
   (p.status == null || p.status === '' || o.status === p.status) &&
   (!p.bscName || String(o.bscName).includes(p.bscName)),
@@ -208,7 +210,7 @@ export const subscribeApi = defineMock('sys_subscribe', () =>
     plan: i % 2 === 0, loaded: i % 3 === 0, cost: i % 2 === 1,
     flightCount: i % 5, storeCount: i % 4,
     createTime: seedTime(i)
-  })), ['name'], 2)
+  })), ['name'], 3)
 subscribeApi.list = (p = {}) => subscribeApi.res.query(o => {
   const kwOk = !p.keyword ||
     (p.selectType === '1' && String(o.name).includes(p.keyword)) ||
@@ -246,7 +248,7 @@ export const noticeCfgApi = defineMock('sys_noticecfg', () => {
     })
   })
   return rows
-}, [], 2)
+}, [], 3)
 
 // 通知中心：源为「消息收件箱」——类型分组 + 未读/已读 + 批量标记已读 + 内容详情
 export const noticeCtrApi = defineMock('sys_noticectr', () =>
@@ -259,7 +261,7 @@ export const noticeCtrApi = defineMock('sys_noticectr', () =>
     read: i % 3 === 0 ? '已读' : '未读',
     receiveTime: seedTime(i),
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 // 通知中心按 类型/已读状态/关键词(标题) 过滤
 noticeCtrApi.list = (p = {}) => noticeCtrApi.res.query(o =>
   (!p.type || o.type === p.type) &&
@@ -287,7 +289,7 @@ export const noticeMngApi = defineMock('sys_noticemng', () =>
     templateTitle: `${at(['下单成功', '运单生成', '账单生成'], i)}模版`,
     templateContent: `尊敬的{客户名称}，您的业务【${at(['下单成功', '运单生成', '账单生成'], i)}】，详情请登录系统查看。`,
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 
 // 状态设置：源为「状态-角色权限矩阵」——按服务大类/排序筛选，每状态配置 5 角色 × (仅查看/可下载)
 export const STATUS_ROLES = ['供应商', '聚货通', '一级代理商', '二级代理商', '客户']
@@ -303,7 +305,7 @@ export const statusApi = defineMock('sys_status', () =>
     viewRoles: i % 2 === 0 ? ['聚货通', '客户'] : ['聚货通', '一级代理商', '客户'],
     fileRoles: i % 2 === 1 ? ['聚货通', '客户'] : [],
     createTime: seedTime(i)
-  })), [], 2)
+  })), [], 3)
 // 状态按 服务大类 过滤 + 排序(升/降)
 statusApi.list = (p = {}) => {
   const res = statusApi.res.raw().filter(o => !p.statusType || o.statusType === p.statusType)
@@ -314,7 +316,7 @@ statusApi.list = (p = {}) => {
 
 // 客户评级：对齐源(级别代码 code/级别描述 name/额度金额 rating/备注 remark)，无状态无筛选
 export const levelApi = defineMock('sys_level', () =>
-  Array.from({ length: 10 }, (_, i) => ({ id: i + 1, code: `LV${i + 1}`, name: `${at(['普通', '白银', '黄金', '钻石'], i)}会员`, rating: (i + 1) * 50000, remark: '', createTime: seedTime(i) })), ['name'], 2)
+  Array.from({ length: 10 }, (_, i) => ({ id: i + 1, code: `LV${i + 1}`, name: `${at(['普通', '白银', '黄金', '钻石'], i)}会员`, rating: (i + 1) * 50000, remark: '', createTime: seedTime(i) })), ['name'], 3)
 
 // 反馈：源为受理台(只读+处理流程)——来源/所属公司/反馈内容/页面截图/状态/时间；操作 查看详情/忽略/已处理/删除，无新增编辑
 export const FEEDBACK_SOURCES = ['PC端', 'PDA端', '小程序', 'APP']
@@ -329,7 +331,7 @@ export const feedbackApi = defineMock('sys_feedback', () =>
     screenshot: '',
     handle: at(FEEDBACK_HANDLE_STATUS, i),
     createTime: seedTime(i)
-  })), ['source', 'handle'], 2)
+  })), ['source', 'handle'], 3)
 // 反馈按 来源/状态 精确 + 创建时间区间(dateRange=[start,end]) 过滤
 feedbackApi.list = (p = {}) => feedbackApi.res.query(o =>
   (!p.source || o.source === p.source) &&

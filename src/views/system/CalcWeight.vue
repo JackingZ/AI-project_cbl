@@ -98,10 +98,12 @@ const measuringBox = () => {
   let boxList = []
   boxForm.value.forEach(item => {
     const { weight, height, length, width, beachTotal } = item
-    const v = (length * width * height) / 1000 / 1000 // 单箱体积(方)
+    // 安全取整：避免空值/小数/负数导致 Array() 抛 RangeError(页面崩溃卡死)
+    const count = Math.max(0, Math.floor(Number(beachTotal) || 0))
+    const v = (Number(length) || 0) * (Number(width) || 0) * (Number(height) || 0) / 1000 / 1000 // 单箱体积(方)
     const vWeight = Number(v) * 167 // 体积重(KG)
-    const row = { aWeight: weight, vWeight: Number(vWeight) }
-    boxList = [...boxList, ...Array(beachTotal).fill(row)]
+    const row = { aWeight: Number(weight) || 0, vWeight: Number(vWeight) }
+    boxList = [...boxList, ...Array(count).fill(row)]
   })
   return boxList
 }
@@ -164,7 +166,13 @@ const calc = () => {
   estimatedWeight.value = handleBubble(boxs)
   return calcSettlementWeight()
 }
-const submitForm = () => { settlementWeight.value = calc() }
+const submitForm = () => {
+  try {
+    settlementWeight.value = calc()
+  } catch (e) {
+    ElMessage.error('计算参数有误，请检查输入')
+  }
+}
 const reset = () => {
   Object.assign(ruleForm, { a1: 2, bubble: 20, boxLowestWeight: 10, orderLowestWeight: 50, a2: 1 })
   boxForm.value = initForm()
