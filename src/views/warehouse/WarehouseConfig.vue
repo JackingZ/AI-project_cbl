@@ -1,5 +1,15 @@
 <template>
   <div>
+    <!-- 更多：仓库配置二级子系统（对齐源 tabsData） -->
+    <PageCard v-if="more.show">
+      <div class="wc-more-head">
+        <h3>仓库配置 - {{ more.row.name }}</h3>
+        <el-button link type="primary" @click="more.show = false">返 回</el-button>
+      </div>
+      <TabsData :ws-id="more.row.id" :ws-nm="more.row.name" :ct-id="more.row.custId || ''" />
+    </PageCard>
+
+    <template v-else>
     <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
       <el-form-item label="仓库名称"><el-input v-model="query.name" placeholder="请输入名称" clearable style="width: 170px" /></el-form-item>
       <el-form-item label="状态">
@@ -13,7 +23,7 @@
       </template>
     </SearchBar>
     <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="220" @change="loadData">
+      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="280" @change="loadData">
         <template #col-region="{ row }">
           <span v-if="row.stateName">{{ row.stateName }}</span>
           <span v-if="row.cityName"> &gt; {{ row.cityName }}</span>
@@ -30,9 +40,11 @@
           <el-button link type="primary" size="small" :disabled="!can('config')" @click="openSvc(row)">设置服务</el-button>
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
           <el-button link type="danger" size="small" :disabled="!can('del')" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" @click="openMore(row)">更多</el-button>
         </template>
       </ProTable>
     </PageCard>
+    </template>
 
     <!-- 新增/编辑（对齐源：名称/地区/邮编/地址/入库限重+单位/卸货平台·叉车·监管仓·中转仓 开关） -->
     <Modal v-model="dialog.visible" :title="dialog.isEdit ? '编辑仓库' : '新增仓库'" width="720px" :confirm-loading="dialog.loading" @confirm="submit">
@@ -79,6 +91,7 @@ import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
+import TabsData from './config-tabs/TabsData.vue'
 import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
 import { required } from '@/utils/validate'
 import { configApi, WEIGHT_UNITS } from '@/api/modules/warehouse'
@@ -107,6 +120,10 @@ const { formRef, dialog, form, openAdd, openEdit, submit, remove } = useCrudForm
 const onCountry = () => { form.stateName = ''; form.cityName = '' }
 const toggleStatus = (row, v) => { configApi.update(row.id, { status: v }).then(() => { ElMessage.success('操作成功'); loadData() }) }
 
+// 更多：进入仓库配置二级子系统（班次/岗位/分拣口/操作中心/库位/转仓/条款/成本项目）
+const more = reactive({ show: false, row: {} })
+const openMore = row => { more.row = row; more.show = true }
+
 // 设置服务（源 settingService：多选服务大类，存该仓库 services）
 const SVC_OPTIONS = ['卸货', '计量', '验货', '拆柜', '打托', '换单', '出库', '调拨', '盘点'].map(v => ({ key: v, label: v }))
 const svc = reactive({ visible: false, loading: false, row: {}, selected: [] })
@@ -131,4 +148,5 @@ const saveSvc = async () => {
 <style scoped lang="scss">
 .wc-form { display: flex; flex-wrap: wrap; :deep(.el-form-item) { width: 50%; } &__full { width: 100% !important; } }
 .sub-tip { margin-bottom: 12px; color: $text-secondary; font-size: $font-sm; }
+.wc-more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; h3 { margin: 0; font-size: 16px; font-weight: 500; color: $text-primary; } }
 </style>

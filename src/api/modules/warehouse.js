@@ -226,3 +226,140 @@ export const configApi = defineMock('wh_config', () =>
       createTime: seedTime(i)
     }
   }), ['name'], 2)
+
+/* ========== 仓库配置 -「更多」二级子系统（对齐源 tabsData 8 子 tab） ========== */
+
+// 8.1 班次信息 schedulingInformation：班次名称 + 起止时间(HH:mm)。源 getSchedulTable/saveSchedul/deleteSchedul
+export const wcSchedulApi = defineMock('wh_wc_schedul', () =>
+  Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: (i % 8) + 1,
+    name: at(['早班', '中班', '晚班', '大夜班'], i),
+    startTime: `${pad(((i % 3) * 8))}:00`,
+    endTime: `${pad(((i % 3) * 8 + 8) % 24)}:00`
+  })), ['warehouseId'], 1)
+
+// 8.2 班次岗位分配 shiftPostAllocation：按天存明细(员工/班次/岗位/操作中心)。源日历 getMonthShiftPost/saveDayShiftPost
+export const wcShiftPostApi = defineMock('wh_wc_shiftpost', () =>
+  Array.from({ length: 16 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: (i % 8) + 1,
+    date: `2024-06-${pad((i % 27) + 1)}`,
+    employeeId: `EMP${pad((i % 6) + 1)}`, employeeName: `员工${pad((i % 6) + 1)}`,
+    shiftId: (i % 3) + 1, shiftName: at(['早班', '中班', '晚班'], i),
+    postId: (i % 4) + 1, postName: at(['卸货工', '分拣工', '打托工', '装车工'], i),
+    wcId: (i % 3) + 1, wcName: at(['卸货中心', '分拣中心', '出库中心'], i)
+  })), ['warehouseId'], 1)
+
+// 8.3 分拣口 dischargingHatch：名称/编码/备注。源无分页 getDischargeTable/saveDischarge/deleteDischarge
+export const wcDischargeApi = defineMock('wh_wc_discharge', () =>
+  Array.from({ length: 10 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: (i % 8) + 1,
+    discharge: `${(i % 6) + 1}号分拣口`,
+    code: `${(i % 6) + 1}`,
+    remarks: i % 2 ? '临近卸货平台' : ''
+  })), ['warehouseId'], 1)
+
+// 8.4 操作中心 operatingCenter：名称/排序/岗位/效率数值+单位(um)/效率周期(per)/工序(taskType)/是否排程
+export const WC_UM = [{ id: '1', name: 'kg' }, { id: '2', name: 'm³' }, { id: '3', name: '件' }, { id: '4', name: '箱' }]
+export const WC_PER = { 1: '天', 2: '小时', 3: '分钟' }
+export const WC_TASK_TYPES = [{ id: 1, name: '卸货' }, { id: 2, name: '装载' }, { id: 3, name: '上架' }, { id: 4, name: '分拣' }]
+export const wcCenterApi = defineMock('wh_wc_center', () =>
+  Array.from({ length: 10 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: (i % 8) + 1,
+    wcId: `WC${pad(i + 1)}`,
+    name: at(['卸货中心', '分拣中心', '出库中心', '打托中心'], i),
+    sorted: i + 1,
+    jobName: at(['卸货工,', '分拣工,', '装车工,'], i),
+    jobIds: `${(i % 4) + 1}`,
+    job: [(i % 4) + 1],
+    taskType: (i % 4) + 1,
+    efficiency: (i % 5 + 1) * 20,
+    um: String((i % 4) + 1),
+    per: String((i % 2) + 2),
+    schedule: i % 2 === 0,
+    updateTime: seedTime(i)
+  })), ['warehouseId'], 1)
+
+// 8.5 库位信息 locationManagement：树表(库区>巷道>货架>层>格子)。源 getSLTree/deleteBin
+export const BIN_TYPE_LIST = [
+  { id: 1, name: '计量区' }, { id: 2, name: '问题件区' }, { id: 3, name: '验货区' },
+  { id: 4, name: '待出库区' }, { id: 5, name: '补货区' }, { id: 20, name: '存储区' }
+]
+export const LOC_TYPE = { 1: '库区', 2: '巷道', 3: '货架', 4: '层', 5: '格子' }
+export const LOC_LIMIT = { 1: '带电', 2: '带磁', 3: '液体' }
+export const LOC_RULE = { 1: '一位一品', 2: '一位多品' }
+export const LOC_POSITION = { 1: '巷道左边', 2: '巷道右边' }
+export const wcLocationApi = defineMock('wh_wc_location', () => {
+  const rows = []
+  let id = 1
+  for (let w = 1; w <= 8; w++) {
+    for (let a = 0; a < 2; a++) {
+      const areaId = id++
+      rows.push({ id: areaId, warehouseId: w, parentId: 0, level: 1, type: '1', binType: at([20, 1, 3], a), code: `${w}-K${a + 1}`, limitType: a === 0 ? 1 : '', serviceName: a === 0 ? '存储,计量' : '', custName: '', rule: '' })
+      const laneId = id++
+      rows.push({ id: laneId, warehouseId: w, parentId: areaId, level: 2, type: '2', code: `${w}-K${a + 1}-X1`, limitType: '', serviceName: '', custName: '', rule: '' })
+      const shelfId = id++
+      rows.push({ id: shelfId, warehouseId: w, parentId: laneId, level: 3, type: '3', code: `${w}-K${a + 1}-X1-J1`, position: 1, limitType: '', serviceName: '', custName: '', rule: '' })
+      const floorId = id++
+      rows.push({ id: floorId, warehouseId: w, parentId: shelfId, level: 4, type: '4', code: `${w}-K${a + 1}-X1-J1-C1`, limitType: '', serviceName: '', custName: '', rule: '' })
+      rows.push({ id: id++, warehouseId: w, parentId: floorId, level: 5, type: '5', code: `${w}-K${a + 1}-X1-J1-C1-G1`, limitType: '', serviceName: '', custName: '', rule: '2' })
+    }
+  }
+  return rows
+}, [], 1)
+
+// 8.6 转仓信息 transferInformation：目的仓/转仓时间/重量单价+单位/体积单价+单位
+export const TRANSIT_UM_W = ['KGS', 'LBS', 'OZS']
+export const TRANSIT_UM_V = ['CBM', 'CUFT']
+export const wcTransitApi = defineMock('wh_wc_transit', () =>
+  Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: (i % 8) + 1,
+    targetId: (i % 4) + 1,
+    targetName: wh(i + 1),
+    transitTime: (i % 48) + 1,
+    priceWeight: Number(((i % 10) + 1.5).toFixed(2)), umWeight: at(TRANSIT_UM_W, i),
+    priceVolume: Number(((i % 20) + 5.25).toFixed(2)), umVolume: at(TRANSIT_UM_V, i)
+  })), ['warehouseId'], 1)
+
+// 8.7 入库条款 warehouseClause：每仓一段富文本条款。源 getWarehouseClause/saveWarehouseClause
+export const wcClauseApi = defineMock('wh_wc_clause', () =>
+  Array.from({ length: 8 }, (_, i) => ({
+    id: i + 1,
+    warehouseId: i + 1,
+    terms: `## ${wh(i)}入库条款\n\n1. 货物须于预约时段送达。\n2. 超重/超尺寸货物需提前报备。\n3. 危险品、带电、带磁货物须单独申报。`
+  })), ['warehouseId'], 1)
+
+// 8.8 成本项目配置 custItemConfig：项目中英文名/服务类型/项目类型/结算单位/发票描述/备注 + 配置状态点
+export const SETTLEMENT_LIST = {
+  0: '按重量', 1: '按体积', 2: '按金额', 3: '按票', 4: '按箱', 5: '按车',
+  6: '按柜', 7: '按里程', 8: '按时间', 9: '按托', A: '按个数'
+}
+export const wcCostItemApi = defineMock('wh_wc_costitem', () =>
+  Array.from({ length: 10 }, (_, i) => {
+    const settlement = ['0', '1', '3', '4', '5', '6', '7', '8', '9', 'A'][i % 10]
+    return {
+      id: i + 1,
+      warehouseId: (i % 8) + 1,
+      name: at(['卸货费', '打托费', '仓储费', '换单费', '验货费'], i),
+      alias: at(['Unloading', 'Palletizing', 'Storage', 'Relabel', 'Inspection'], i),
+      serviceTypeName: at(['海运整柜', '海运散货', '空运', '卡航'], i),
+      list: [{ id: (i % 3) + 1, name: at(['基础', '增值', '附加'], i) }],
+      settlement,
+      invoice: `${at(['卸货', '打托', '仓储'], i)}服务费`,
+      remark: '',
+      transConfiged: i % 2 === 0,
+      status: '0',
+      type: 1,
+      sections: []
+    }
+  }), ['warehouseId'], 1)
+
+// 子表单下拉字典（员工/岗位/目的仓 选择项）
+export const WC_EMPLOYEES = Array.from({ length: 6 }, (_, i) => ({ id: `EMP${pad(i + 1)}`, username: `员工${pad(i + 1)}` }))
+export const WC_POSTS = [{ id: 1, name: '卸货工' }, { id: 2, name: '分拣工' }, { id: 3, name: '打托工' }, { id: 4, name: '装车工' }]
+export const WC_SERVICES = ['存储', '计量', '验货', '拆柜', '打托', '换单', '出库']
+export const WC_PURPOSE_WH = WAREHOUSES.map((n, i) => ({ id: i + 1, name: n }))
