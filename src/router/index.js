@@ -131,7 +131,7 @@ const financialModule = {
     { path: 'fiscal-period', title: '会计期间', name: 'FinPeriod', keepAlive: true, component: () => import('@/views/financial/FiscalPeriod.vue') },
     { path: 'company-credit', title: '公司信用', name: 'FinCredit', keepAlive: true, component: () => import('@/views/financial/CompanyCredit.vue') },
     { path: 'risk-control', title: '风险控制', name: 'FinRisk', keepAlive: true, component: () => import('@/views/financial/RiskControl.vue') },
-    { path: 'financial-order', title: '专线订单', name: 'FinOrder', keepAlive: true, component: () => import('@/views/financial/FinancialOrder.vue') }
+    { path: 'financial-order', title: '专线订单', name: 'FinLineOrder', keepAlive: true, component: () => import('@/views/financial/FinancialOrder.vue') }
   ]
 }
 
