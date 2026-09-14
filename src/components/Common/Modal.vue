@@ -8,8 +8,11 @@
     class="common-modal"
     @closed="$emit('closed')"
   >
+    <template v-if="$slots.title" #header>
+      <slot name="title" />
+    </template>
     <slot />
-    <template #footer>
+    <template v-if="footer" #footer>
       <slot name="footer">
         <el-button @click="handleCancel">{{ cancelText }}</el-button>
         <el-button type="primary" :loading="confirmLoading" @click="$emit('confirm')">
@@ -30,7 +33,8 @@ const props = defineProps({
   width: { type: String, default: '520px' },
   confirmText: { type: String, default: '确定' },
   cancelText: { type: String, default: '取消' },
-  confirmLoading: { type: Boolean, default: false }
+  confirmLoading: { type: Boolean, default: false },
+  footer: { type: Boolean, default: true }
 })
 const emit = defineEmits(['update:modelValue', 'confirm', 'closed'])
 
