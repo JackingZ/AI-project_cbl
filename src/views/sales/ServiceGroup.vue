@@ -1,56 +1,73 @@
 <template>
   <div>
+    <!-- 服务组列表：无独立筛选字段，仅「新增」+「查询」（源 app-panel 头部） -->
     <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="服务组名称"><el-input v-model="query.name" placeholder="请输入名称" clearable style="width: 170px" /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" />
-        </el-select>
-      </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
+      <template #actions>
+        <el-button type="success" :icon="CirclePlus" :disabled="!can('add')" @click="openAdd">新增</el-button>
+      </template>
     </SearchBar>
+
     <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" @change="v => toggle(row, v)" /></template>
+      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="150" @change="loadData">
+        <template #col-status="{ row }">
+          <el-switch :model-value="row.status" active-value="1" inactive-value="0" @change="v => onStatus(row, v)" />
+        </template>
         <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+          <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
         </template>
       </ProTable>
     </PageCard>
-    <Modal v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="服务组名称" prop="name"><el-input v-model="form.name" placeholder="请输入名称" /></el-form-item>
-        <el-form-item label="组长" prop="leader"><el-input v-model="form.leader" placeholder="请输入组长" /></el-form-item>
-        <el-form-item label="成员数" prop="members"><el-input-number v-model="form.members" :min="0" :controls="false" style="width: 100%" /></el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status"><el-radio v-for="s in STATUS_OPTIONS" :key="s" :value="s">{{ s }}</el-radio></el-radio-group>
-        </el-form-item>
-      </el-form>
-    </Modal>
+
+    <GroupForm ref="groupFormRef" :is-edit="isEdit" @save-success="loadData" />
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
+import { ref } from 'vue'
+import { CirclePlus } from '@element-plus/icons-vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
-import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
-import { required } from '@/utils/validate'
-import { groupApi, STATUS_OPTIONS } from '@/api/modules/sales'
+import GroupForm from './components/group-form.vue'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { groupApi } from '@/api/modules/sales'
 
 defineOptions({ name: 'SalesGroup' })
-const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(groupApi.list, { name: '', status: '' })
+const { can } = usePagePerms()
+
+const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(groupApi.list, {})
+
 const columns = [
-  { prop: 'name', label: '服务组名称', minWidth: 160 },
-  { prop: 'leader', label: '组长', width: 120 },
-  { prop: 'members', label: '成员数', width: 100, align: 'center' },
-  { prop: 'status', label: '状态', width: 90, align: 'center' },
-  { prop: 'createTime', label: '创建时间', width: 170 }
+  { prop: 'name', label: '服务组名称', width: 200 },
+  { prop: 'countryName', label: '目的国', width: 200 },
+  { prop: 'lscName', label: '服务', minWidth: 200 },
+  { prop: 'status', label: '开关', width: 80, align: 'center' }
 ]
-const rules = { name: [required('请输入名称')] }
-const defaultForm = () => ({ name: '', leader: '', members: 0, status: '启用' })
-const { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove } = useCrudForm({ api: groupApi, defaultForm, reload: loadData, label: '服务组' })
+
+const groupFormRef = ref(null)
+const isEdit = ref(false)
+const openAdd = () => { isEdit.value = false; groupFormRef.value.show() }
+const openEdit = row => { isEdit.value = true; groupFormRef.value.show(row) }
+
+// 开关切换：确认后调 setGroupStatus；取消也刷新回滚显示（对齐源 onStatus）
+const onStatus = (row, val) => {
+  ElMessageBox.confirm(`请确认是否${val === '0' ? '关闭' : '开启'}该条数据?`, '提示', { type: 'warning' })
+    .then(async () => {
+      await groupApi.setStatus(row.id, val)
+      ElMessage.success('操作成功')
+      loadData()
+    })
+    .catch(() => loadData())
+}
+
+const handleDelete = row => {
+  ElMessageBox.confirm('请确认是否删除该条数据?', '提示', { type: 'warning' })
+    .then(async () => {
+      await groupApi.remove(row.id)
+      ElMessage.success('删除成功')
+      loadData()
+    })
+    .catch(() => {})
+}
 </script>
