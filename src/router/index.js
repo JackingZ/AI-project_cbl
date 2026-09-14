@@ -194,7 +194,8 @@ const operatingCostModule = {
   path: 'operating-cost', title: '运营成本', icon: Wallet,
   children: [
     { path: 'projects', title: '成本项目', name: 'CostProjects', keepAlive: true, component: () => import('@/views/operating-cost/Projects.vue') },
-    { path: 'project-groups', title: '成本项目组', name: 'CostGroups', keepAlive: true, component: () => import('@/views/operating-cost/ProjectGroups.vue') }
+    { path: 'project-groups', title: '成本项目组', name: 'CostGroups', keepAlive: true, component: () => import('@/views/operating-cost/ProjectGroups.vue') },
+    { path: 'service-surcharge', title: '服务附加费', name: 'CostServiceSurcharge', keepAlive: true, component: () => import('@/views/operating-cost/ServiceSurcharge.vue') }
   ]
 }
 
