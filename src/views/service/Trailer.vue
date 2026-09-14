@@ -1,63 +1,215 @@
 <template>
   <div>
-    <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="服务名称"><el-input v-model="query.name" placeholder="请输入名称" clearable style="width: 170px" /></el-form-item>
-      <el-form-item label="拖车类型">
-        <el-select v-model="query.type" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="t in TRAILER_TYPES" :key="t" :label="t" :value="t" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-          <el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" />
-        </el-select>
-      </el-form-item>
-      <template #actions><el-button type="success" :icon="Plus" @click="openAdd">新增</el-button></template>
-    </SearchBar>
-    <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" @change="loadData">
-        <template #col-status="{ row }"><el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" @change="v => toggle(row, v)" /></template>
-        <template #actions="{ row }">
-          <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="remove(row)">删除</el-button>
+    <!-- 头部（编辑表单时隐藏） -->
+    <div v-if="!addEditFormShow">
+      <SearchBar :model="query" @search="handleSearch" @reset="handleReset">
+        <el-form-item>
+          <el-select v-model="query.addressCategory" placeholder="地址类别" filterable clearable style="width: 100px">
+            <el-option v-for="item in ADDRESS_CATEGORY_LIST" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="query.addressType" placeholder="目的地类型" filterable clearable style="width: 120px">
+            <el-option v-for="item in TRAILER_ADDRESS_TYPE_LIST" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="query.countryId" placeholder="所在国家" filterable clearable style="width: 130px" @change="onCountry">
+            <el-option v-for="item in countryList" :key="item.id" :label="`${item.name}-${item.alias}`" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="query.stateId" :disabled="!query.countryId" placeholder="州/省" filterable clearable style="width: 130px" @focus="loadState" @change="onState">
+            <el-option v-for="item in stateList" :key="item.id" :label="`${item.name}-${item.alias}`" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="query.cityId" :disabled="!query.stateId" placeholder="城市" filterable clearable style="width: 130px" @focus="loadCity">
+            <el-option v-for="item in cityList" :key="item.id" :label="`${item.name}-${item.alias}`" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="query.subtypeId" placeholder="服务类型" filterable clearable style="width: 100px">
+            <el-option v-for="item in subTypeList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="query.keyword" placeholder="请输入内容" clearable style="width: 280px">
+            <template #prepend>
+              <el-select v-model="query.selectType" style="width: 110px">
+                <el-option v-for="item in SELECT_TYPE_LIST" :key="item.id" :label="item.name" :value="item.id" />
+              </el-select>
+            </template>
+          </el-input>
+        </el-form-item>
+        <template #actions>
+          <el-button type="success" :icon="CirclePlus" :disabled="!can('add')" @click="openAdd">新增服务</el-button>
+          <!-- 源注释：设置组合入口默认隐藏
+          <el-button type="primary" :icon="EditPen" @click="openGroup">设置组合</el-button>
+          -->
         </template>
-      </ProTable>
-    </PageCard>
-    <Modal v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="服务名称" prop="name"><el-input v-model="form.name" placeholder="请输入名称" /></el-form-item>
-        <el-form-item label="拖车类型" prop="type">
-          <el-select v-model="form.type" style="width: 100%"><el-option v-for="t in TRAILER_TYPES" :key="t" :label="t" :value="t" /></el-select>
-        </el-form-item>
-        <el-form-item label="起运港" prop="port"><el-input v-model="form.port" placeholder="请输入起运港" /></el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status"><el-radio v-for="s in STATUS_OPTIONS" :key="s" :value="s">{{ s }}</el-radio></el-radio-group>
-        </el-form-item>
-      </el-form>
+      </SearchBar>
+
+      <!-- 源注释：<inputTags ref="inputTags" /> -->
+
+      <PageCard>
+        <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="180" @change="loadData">
+          <template #col-destination="{ row }">
+            <div style="display: flex; align-items: center">
+              <span class="cfg-dot" :style="{ color: row.y ? '#4cd964' : '#ff3b30' }">·</span>
+              <el-button link type="primary" size="small" @click="handleAddress(row)">目的地址</el-button>
+            </div>
+          </template>
+          <template #col-cabinet="{ row }">
+            <div style="display: flex; align-items: center">
+              <span class="cfg-dot" :style="{ color: row.x ? '#4cd964' : '#ff3b30' }">·</span>
+              <el-button link type="primary" size="small" @click="handleCabinet(row)">设置柜型</el-button>
+            </div>
+          </template>
+          <template #col-agent="{ row }">
+            <el-button link type="primary" size="small" @click="handleAgent(row)">关联代理商</el-button>
+          </template>
+          <template #col-status="{ row }">
+            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+          </template>
+          <template #actions="{ row }">
+            <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
+            <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" :disabled="!can('del')" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </ProTable>
+      </PageCard>
+    </div>
+
+    <!-- 内嵌新增/编辑表单 -->
+    <TrailerForm v-if="addEditFormShow" :is-edit="isEdit" :is-copy="isCopy" :row="editRow" :country-list="countryList" :sub-type-list="subTypeList" @back="addEditFormShow = false" @save-success="onSaved" />
+
+    <!-- 关联代理商 -->
+    <RelevanceTransfer v-model="agentDlg.visible" :title="agentDlg.title" :titles="['选择关联代理商', '已关联代理商']" :company-list="agentList" :selected="agentDlg.selected" @save="saveAgent" />
+
+    <!-- 目的地址 / 设置柜型 -->
+    <TrailerAddAddress ref="addAddressRef" :country-list="countryList" @load="loadData" />
+    <TrailerSetCabinet ref="setCabinetRef" @saved="loadData" />
+
+    <!-- 设置服务组合（源命令行按钮隐藏，弹窗保留） -->
+    <Modal v-model="groupDlg.visible" title="设置服务组合" width="960px" :footer="false">
+      <TrailerSet v-if="groupDlg.visible" :sub-type-data="subTypeList" />
     </Modal>
   </div>
 </template>
 
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted } from 'vue'
+import { CirclePlus, EditPen } from '@element-plus/icons-vue'
 import SearchBar from '@/components/Common/SearchBar.vue'
 import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
-import { useListQuery, useCrudForm } from '@/utils/hooks'
-import { required } from '@/utils/validate'
-import { trailerSvc, TRAILER_TYPES, STATUS_OPTIONS } from '@/api/modules/service'
+import RelevanceTransfer from '@/views/price/components/RelevanceTransfer.vue'
+import TrailerForm from './components/trailer-form.vue'
+import TrailerAddAddress from './components/trailer-add-address.vue'
+import TrailerSetCabinet from './components/trailer-set-cabinet.vue'
+import TrailerSet from './components/trailer-set.vue'
+import { useListQuery, usePagePerms } from '@/utils/hooks'
+import {
+  trailerApi, getCountryList, getStateByCountry, getCityByState, getServiceSubtypeList,
+  ADDRESS_CATEGORY_LIST, TRAILER_ADDRESS_TYPE_LIST, SELECT_TYPE_LIST
+} from '@/api/modules/service'
 
 defineOptions({ name: 'SvcTrailer' })
-const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(trailerSvc.list, { name: '', type: '', status: '' })
+const { can } = usePagePerms()
+
+const fetchList = (p = {}) => {
+  const params = {
+    page: p.page, size: p.size,
+    addressCategory: p.addressCategory, addressType: p.addressType,
+    countryId: p.countryId, subtypeId: p.subtypeId
+  }
+  if (p.selectType === '1') params.code = p.keyword
+  else if (p.selectType === '2') params.name = p.keyword
+  return trailerApi.list(params)
+}
+const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(fetchList, {
+  addressCategory: '', addressType: '', countryId: '', stateId: '', cityId: '', subtypeId: '', keyword: '', selectType: '1'
+})
+
 const columns = [
-  { prop: 'name', label: '服务名称', minWidth: 160 },
-  { prop: 'type', label: '拖车类型', width: 120 },
-  { prop: 'port', label: '起运港', width: 140 },
-  { prop: 'status', label: '状态', width: 90, align: 'center' },
-  { prop: 'createTime', label: '创建时间', width: 170 }
+  { prop: 'name', label: '服务名称', minWidth: 190, fixed: 'left' },
+  { prop: 'tsId', label: '服务编码', minWidth: 120, fixed: 'left' },
+  { prop: 'abbr', label: '服务简称', minWidth: 160 },
+  { prop: 'subtypeName', label: '服务类型', minWidth: 180 },
+  { prop: 'destination', label: '目的地址', width: 110 },
+  { prop: 'cabinet', label: '设置柜型', width: 110 },
+  { prop: 'agent', label: '关联代理商', width: 130 },
+  { prop: 'createTime', label: '添加时间', minWidth: 160 },
+  { prop: 'status', label: '启用状态', width: 130, align: 'center', fixed: 'right' }
 ]
-const rules = { name: [required('请输入名称')], type: [required('请选择拖车类型', 'change')] }
-const defaultForm = () => ({ name: '', type: '整柜', port: '', status: '启用' })
-const { formRef, dialog, form, openAdd, openEdit, submit, toggle, remove } = useCrudForm({ api: trailerSvc, defaultForm, reload: loadData, label: '拖车服务' })
+
+/* 服务类型（typeId '06'） */
+const subTypeList = ref([])
+
+/* 筛选下拉级联 */
+const countryList = ref([])
+const stateList = ref([])
+const cityList = ref([])
+const loadState = async () => { if (query.countryId) stateList.value = (await getStateByCountry(query.countryId)).data }
+const loadCity = async () => { if (query.stateId) cityList.value = (await getCityByState(query.stateId)).data }
+const onCountry = () => { query.stateId = ''; query.cityId = ''; stateList.value = []; cityList.value = [] }
+const onState = () => { query.cityId = ''; cityList.value = [] }
+
+onMounted(async () => {
+  countryList.value = (await getCountryList()).data
+  subTypeList.value = (await getServiceSubtypeList('06')).data
+})
+
+/* 新增/编辑/复制 内嵌表单 */
+const addEditFormShow = ref(false)
+const isEdit = ref(false)
+const isCopy = ref(false)
+const editRow = ref(null)
+const openAdd = () => { isEdit.value = false; isCopy.value = false; editRow.value = null; addEditFormShow.value = true }
+const openEdit = row => { isEdit.value = true; isCopy.value = false; editRow.value = { ...row }; addEditFormShow.value = true }
+const openCopy = row => { isEdit.value = true; isCopy.value = true; editRow.value = { ...row }; addEditFormShow.value = true }
+const onSaved = () => { addEditFormShow.value = false; loadData() }
+
+/* 关联代理商 */
+const agentList = ref([])
+const agentDlg = reactive({ visible: false, title: '', selected: [], id: null })
+const handleAgent = async row => {
+  agentList.value = (await trailerApi.getAgents(row.subtypeId)).data
+  agentDlg.selected = (await trailerApi.getAgentById(row.id)).data
+  agentDlg.title = `关联代理商【${row.name}】`
+  agentDlg.id = row.id
+  agentDlg.visible = true
+}
+const saveAgent = async ids => { await trailerApi.saveAgent(agentDlg.id, ids); ElMessage.success('保存成功'); loadData() }
+
+/* 目的地址 / 设置柜型 */
+const addAddressRef = ref()
+const setCabinetRef = ref()
+const handleAddress = row => addAddressRef.value.show(row)
+const handleCabinet = row => setCabinetRef.value.show(row)
+
+/* 设置服务组合（隐藏入口） */
+const groupDlg = reactive({ visible: false })
+const openGroup = () => { groupDlg.visible = true }
+
+/* 启用/禁用（STRING '1'/'0'，源二态守卫） */
+const onStatus = (row, val) => {
+  const olds = String(row.status); const news = String(val)
+  if (!olds || olds === news) return
+  const text = news === '0' ? '禁用' : '开启'
+  ElMessageBox.confirm(`此操作将${text}该拖车服务，是否继续？`, '提示', { type: 'warning', closeOnClickModal: false })
+    .then(async () => { await trailerApi.changeStatus(row.id, val); ElMessage.success('修改成功'); loadData() })
+    .catch(() => loadData())
+}
+const handleDelete = row => {
+  ElMessageBox.confirm('请确认是否删除该条数据?', '温馨提示', { type: 'warning', closeOnClickModal: false })
+    .then(async () => { await trailerApi.res.remove(row.id); ElMessage.success('删除成功'); loadData() })
+    .catch(() => {})
+}
 </script>
+
+<style scoped lang="scss">
+.cfg-dot { font-size: 30px; margin-right: 5px; font-weight: bold; line-height: 1; }
+</style>
