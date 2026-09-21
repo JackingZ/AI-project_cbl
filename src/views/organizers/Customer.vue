@@ -57,7 +57,7 @@
           <el-tag :type="auditTag(row.audit)" effect="light">{{ row.audit }}</el-tag>
         </template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="normalizeSwitchValue(row.status, '启用', '禁用')" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('view')" @click="openView(row)">查看</el-button>
@@ -383,6 +383,7 @@ import RelateStaffDialog from '@/components/Common/RelateStaffDialog.vue'
 import MoreInfoPanel from '@/components/Common/MoreInfoPanel.vue'
 import ImportDialog from '@/components/Common/ImportDialog.vue'
 import { confirmDelete } from '@/utils'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required } from '@/utils/validate'
 import {
   getCustomerList, addCustomer, updateCustomer, deleteCustomer, toggleCustomerStatus,

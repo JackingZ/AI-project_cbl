@@ -58,7 +58,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="240"
+        :action-width="260"
         @change="loadData"
       >
         <template #col-status="{ row }">

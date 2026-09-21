@@ -15,7 +15,7 @@
       <el-table-column prop="lscName" label="服务" min-width="200" show-overflow-tooltip />
       <el-table-column label="开关" width="80" show-overflow-tooltip>
         <template #default="scope">
-          <el-switch :model-value="scope.row.status" class="switchStyle" active-value="1" inactive-value="0" @change="value => onStatus(scope.row, value)" />
+          <el-switch :model-value="normalizeSwitchValue(scope.row.status)" class="switchStyle" active-value="1" inactive-value="0" @change="value => onStatus(scope.row, value)" />
         </template>
       </el-table-column>
       <el-table-column fixed="right" label="操作" width="150">
@@ -35,6 +35,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { CirclePlus } from '@element-plus/icons-vue'
 import PrivatelineGroupForm from './privateline-group-form.vue'
+import { normalizeSwitchValue } from '@/utils/format'
 import { lineGroupApi } from '@/api/modules/service'
 
 defineOptions({ name: 'PrivatelineLineGroup' })

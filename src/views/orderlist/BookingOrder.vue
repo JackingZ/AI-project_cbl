@@ -78,7 +78,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="300"
+        :action-width="370"
         @change="loadData"
       >
         <template #col-supplierName="{ row }">{{ row.supplierName || '未指派' }}</template>

@@ -8,7 +8,7 @@
       <el-form-item label="仓库"><el-input v-model="query.warehouseName" placeholder="请输入仓库" clearable style="width: 140px" /></el-form-item>
     </SearchBar>
     <PageCard>
-      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="180" @change="loadData">
+      <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="200" @change="loadData">
         <template #col-status="{ row }">
           <el-tag :type="row.status === '待换单' ? 'warning' : 'success'" size="small">{{ row.status }}</el-tag>
         </template>

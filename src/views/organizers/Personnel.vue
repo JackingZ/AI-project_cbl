@@ -43,7 +43,7 @@
         <template #col-status="{ row }">
           <el-switch
             v-if="!isProtected(row)"
-            :model-value="row.status"
+            :model-value="normalizeSwitchValue(row.status, '启用', '禁用')"
             active-value="启用"
             inactive-value="禁用"
             :disabled="!can('edit')"
@@ -119,6 +119,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import FormDrawer from '@/components/Common/FormDrawer.vue'
 import { confirmDelete } from '@/utils'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required, phoneRule } from '@/utils/validate'
 import { useUserStore } from '@/store/user'
 import {

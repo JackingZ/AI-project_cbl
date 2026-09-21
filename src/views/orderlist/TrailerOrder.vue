@@ -58,7 +58,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="240"
+        :action-width="300"
         @change="loadData"
       >
         <template #col-audit="{ row }">

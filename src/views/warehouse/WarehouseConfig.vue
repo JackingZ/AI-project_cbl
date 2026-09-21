@@ -34,7 +34,7 @@
         <template #col-supervise="{ row }">{{ row.supervise === 1 ? '√' : '--' }}</template>
         <template #col-transfer="{ row }">{{ row.transfer === 1 ? '√' : '--' }}</template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="1" inactive-value="0" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
+          <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" :disabled="!can('edit')" @change="v => toggleStatus(row, v)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('config')" @click="openSvc(row)">设置服务</el-button>
@@ -69,10 +69,10 @@
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="卸货平台"><el-switch v-model="form.unloading" :active-value="1" :inactive-value="0" /></el-form-item>
-        <el-form-item label="叉车"><el-switch v-model="form.forklift" :active-value="1" :inactive-value="0" /></el-form-item>
-        <el-form-item label="监管仓"><el-switch v-model="form.supervise" :active-value="1" :inactive-value="0" /></el-form-item>
-        <el-form-item label="中转仓"><el-switch v-model="form.transfer" :active-value="1" :inactive-value="0" /></el-form-item>
+        <el-form-item label="卸货平台"><el-switch :model-value="normalizeSwitchValue(form.unloading, 1, 0)" :active-value="1" :inactive-value="0" @update:model-value="form.unloading = $event" /></el-form-item>
+        <el-form-item label="叉车"><el-switch :model-value="normalizeSwitchValue(form.forklift, 1, 0)" :active-value="1" :inactive-value="0" @update:model-value="form.forklift = $event" /></el-form-item>
+        <el-form-item label="监管仓"><el-switch :model-value="normalizeSwitchValue(form.supervise, 1, 0)" :active-value="1" :inactive-value="0" @update:model-value="form.supervise = $event" /></el-form-item>
+        <el-form-item label="中转仓"><el-switch :model-value="normalizeSwitchValue(form.transfer, 1, 0)" :active-value="1" :inactive-value="0" @update:model-value="form.transfer = $event" /></el-form-item>
       </el-form>
     </Modal>
 
@@ -93,6 +93,7 @@ import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import TabsData from './config-tabs/TabsData.vue'
 import { useListQuery, useCrudForm, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required } from '@/utils/validate'
 import { configApi, WEIGHT_UNITS } from '@/api/modules/warehouse'
 

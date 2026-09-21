@@ -158,7 +158,7 @@ const columns = [
   { prop: 'address', label: '详细地址一', minWidth: 180 },
   { prop: 'postal', label: '邮政编码', width: 120 },
   { prop: 'recipient', label: '收货公司', minWidth: 180 },
-  { prop: 'status', label: '启用状态', width: 130 }
+  { prop: 'status', label: '启用状态', width: 150 }
 ]
 const typeLabel = v => FBA_TYPE_OPTIONS.find(t => t.value === v)?.label || v
 

@@ -25,7 +25,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="240"
+        :action-width="260"
         @change="loadData"
       >
         <template #col-uploaded="{ row }">
@@ -33,7 +33,7 @@
         </template>
         <template #col-status="{ row }">
           <el-switch
-            :model-value="row.status"
+            :model-value="normalizeSwitchValue(row.status, '上线', '下线')"
             active-value="上线"
             inactive-value="下线"
             :disabled="!can('changeStatus')"
@@ -88,6 +88,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required } from '@/utils/validate'
 import { confirmDelete, confirmThen, demoAction } from '@/utils'
 import { pdaApi, PDA_FORCE } from '@/api/modules/system'
@@ -97,9 +98,9 @@ const { can } = usePagePerms()
 const { query, list, total, loading, loadData, handleSearch, handleReset } = useListQuery(pdaApi.list, { dateRange: [] })
 
 const columns = [
-  { prop: 'versions', label: '版本号', width: 120 },
-  { prop: 'createTime', label: '发布时间', width: 170 },
-  { prop: 'uploaded', label: '是否强制更新', width: 130, align: 'center' },
+  { prop: 'versions', label: '版本号', minWidth: 120 },
+  { prop: 'createTime', label: '发布时间', minWidth: 170 },
+  { prop: 'uploaded', label: '是否强制更新', minWidth: 130, align: 'center' },
   { prop: 'status', label: '状态', width: 100, align: 'center' }
 ]
 

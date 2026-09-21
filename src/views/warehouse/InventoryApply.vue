@@ -17,7 +17,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="300"
+        :action-width="330"
         @change="loadData"
       >
         <template #col-status="{ row }"><el-tag size="small" :type="statusTag(row.status)">{{ INVENTORY_STATUS[row.status] }}</el-tag></template>

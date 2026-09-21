@@ -129,7 +129,7 @@
       <div class="credit-flags">
         <div v-for="f in FLAG_FIELDS" :key="f.key" class="credit-flags__item">
           <span class="credit-flags__label">{{ f.label }}</span>
-          <el-switch v-model="flagsForm[f.key]" active-value="1" inactive-value="0" />
+          <el-switch :model-value="normalizeSwitchValue(flagsForm[f.key])" active-value="1" inactive-value="0" @update:model-value="flagsForm[f.key] = $event" />
         </div>
       </div>
     </Modal>
@@ -189,6 +189,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required } from '@/utils/validate'
 import {
   creditApi, CREDIT_RATING_LIST, SOURCE_LIST, TAKE_METHOD_LIST, INV_STATUS_LIST,

@@ -17,6 +17,10 @@ export function formatMoney(value, symbol = '$') {
   return `${symbol}${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+export function normalizeSwitchValue(value, activeValue = '1', inactiveValue = '0') {
+  return String(value) === String(activeValue) ? activeValue : inactiveValue
+}
+
 // 订单状态 → el-tag 类型
 export const ORDER_STATUS_TAG = {
   待发货: 'warning',

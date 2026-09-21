@@ -6,7 +6,7 @@
       <el-button type="primary" size="small" @click="save">保 存</el-button>
     </div>
     <div class="content">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" size="small">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="detail-form" size="small">
         <div class="form-title">基础信息</div>
         <el-form-item label="航线名称" prop="name">
           <el-input v-model="form.name" show-word-limit :maxlength="50" placeholder="请输入" />
@@ -250,8 +250,17 @@ const save = () => {
 </script>
 
 <style scoped lang="scss">
+.detail-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  column-gap: 16px;
+
+  .form-title { grid-column: 1 / -1; }
+  :deep(.el-form-item) { width: 100%; min-width: 0; }
+  :deep(.el-form-item__label) { white-space: nowrap; }
+  :deep(.el-form-item__content) { min-width: 0; }
+}
 .booking-service-edit {
-  .el-form-item { display: inline-block; width: 24.9%; }
   .header-top {
     text-align: right; height: 50px; line-height: 50px; padding: 0 20px;
     font-size: 16px; color: #666; border-bottom: 1px solid #ccc;

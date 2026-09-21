@@ -70,7 +70,7 @@
             <el-button link type="primary" size="small" @click="handleAgent(row)">关联代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -111,6 +111,7 @@ import TrailerAddAddress from './components/trailer-add-address.vue'
 import TrailerSetCabinet from './components/trailer-set-cabinet.vue'
 import TrailerSet from './components/trailer-set.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import {
   trailerApi, getCountryList, getStateByCountry, getCityByState, getServiceSubtypeList,
   ADDRESS_CATEGORY_LIST, TRAILER_ADDRESS_TYPE_LIST, SELECT_TYPE_LIST
@@ -142,7 +143,7 @@ const columns = [
   { prop: 'cabinet', label: '设置柜型', width: 110 },
   { prop: 'agent', label: '关联代理商', width: 130 },
   { prop: 'createTime', label: '添加时间', minWidth: 160 },
-  { prop: 'status', label: '启用状态', width: 130, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 /* 服务类型（typeId '06'） */

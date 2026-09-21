@@ -72,7 +72,7 @@
             <el-button link type="primary" size="small" @click="handleAgent(row)">关联代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -115,6 +115,7 @@ import TruckSetSection from './components/truck-set-section.vue'
 import TruckPurposeSet from './components/truck-purpose-set.vue'
 import TruckSet from './components/truck-set.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import {
   truckApi, getCountryList, getStateByCountry, getCityByState,
   ADDRESS_CATEGORY_LIST, TRUCK_ADDRESS_TYPE_LIST, TRUCK_SUBTYPE_LIST, SELECT_TYPE_LIST
@@ -146,7 +147,7 @@ const columns = [
   { prop: 'destination', label: '目的地', width: 140 },
   { prop: 'agent', label: '关联代理商', width: 130 },
   { prop: 'createTime', label: '添加时间', minWidth: 160 },
-  { prop: 'status', label: '启用状态', width: 120, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 /* 筛选下拉级联 */

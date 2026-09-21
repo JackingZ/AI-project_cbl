@@ -240,7 +240,7 @@ const formParam = () => ({
   returnFax: undefined, returnMail: undefined, returnName: undefined, returnPhone: undefined,
   returnProvinceCode: undefined, returnProvinceName: undefined, returnTaxCode: undefined, returnZip: undefined,
   sameConsignor: 0, serviceCode: undefined, shipperNumber: undefined, shippingDiscount: 0,
-  username: undefined, ifEnable: undefined, volumetricWeightUnit: undefined, weightDiscount: 0
+  username: undefined, ifEnable: 1, volumetricWeightUnit: undefined, weightDiscount: 0
 })
 
 const selectFormRef = ref()

@@ -6,7 +6,7 @@
       <el-button type="primary" size="small" @click="saveData">保 存</el-button>
     </div>
     <div class="content">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" size="small">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="detail-form" size="small">
         <div class="form-title">基础信息</div>
         <el-form-item label="服务名称" prop="name">
           <el-input v-model="form.name" :maxlength="50" placeholder="请输入" />
@@ -220,7 +220,16 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.el-form-item { display: inline-block; width: 24.9%; }
+.detail-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  column-gap: 16px;
+
+  .form-title { grid-column: 1 / -1; }
+  :deep(.el-form-item) { width: 100%; min-width: 0; }
+  :deep(.el-form-item__label) { white-space: nowrap; }
+  :deep(.el-form-item__content) { min-width: 0; }
+}
 .trailer-edit {
   padding: 0;
   .header-top {

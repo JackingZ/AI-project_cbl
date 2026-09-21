@@ -15,7 +15,7 @@
         <template #col-tailBoard="{ row }">{{ row.tailBoard === '有' ? '√' : '×' }}</template>
         <template #col-gps="{ row }">{{ row.gps === '有' ? '√' : '×' }}</template>
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" />
+          <el-switch :model-value="normalizeSwitchValue(row.status, '启用', '禁用')" active-value="启用" inactive-value="禁用" :disabled="!can('edit')" @change="v => toggle(row, v)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
@@ -59,6 +59,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { required } from '@/utils/validate'
 import { confirmDelete } from '@/utils'
 import { carApi, CAR_TYPES, CAR_CONDITIONS, STATUS_OPTIONS } from '@/api/modules/system'

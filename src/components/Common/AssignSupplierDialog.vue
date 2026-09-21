@@ -21,7 +21,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="默认供应商">
-          <el-switch v-model="isDefault" active-value="是" inactive-value="否" />
+          <el-switch :model-value="normalizeSwitchValue(isDefault, '是', '否')" active-value="是" inactive-value="否" @update:model-value="setIsDefault" />
         </el-form-item>
       </el-form>
     </div>
@@ -31,6 +31,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import Modal from '@/components/Common/Modal.vue'
+import { normalizeSwitchValue } from '@/utils/format'
 import { assignSupplier, SUPPLIERS, ASSIGN_TYPES } from '@/api/modules/orderlist'
 
 const props = defineProps({
@@ -43,6 +44,7 @@ const loading = ref(false)
 const supplierName = ref('')
 const assignType = ref(ASSIGN_TYPES[0])
 const isDefault = ref('否')
+const setIsDefault = value => { isDefault.value = value }
 
 watch(
   () => props.modelValue,
@@ -50,7 +52,7 @@ watch(
     if (!open || !props.record) return
     supplierName.value = props.record.supplierName || ''
     assignType.value = props.record.assignType || ASSIGN_TYPES[0]
-    isDefault.value = props.record.isDefault || '否'
+    isDefault.value = normalizeSwitchValue(props.record.isDefault, '是', '否')
   }
 )
 

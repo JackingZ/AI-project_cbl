@@ -138,7 +138,7 @@ const columns = [
   { prop: 'meterial', label: '材质(中文/英文)', minWidth: 180 },
   { prop: 'usage', label: '用途(中文/英文)', minWidth: 180 },
   { prop: 'remarks', label: '备注', minWidth: 180 },
-  { prop: 'deleted', label: '启用状态', width: 100, fixed: 'right' }
+  { prop: 'deleted', label: '启用状态', width: 150, fixed: 'right' }
 ]
 
 const rules = {

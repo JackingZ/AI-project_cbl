@@ -135,8 +135,11 @@ export const groupApi = defineMock('sales_group', () =>
     }
   }), [], 2)
 groupApi.list = (p = {}) => groupApi.res.query(() => true, { page: p.page || 1, size: p.size || 10 })
-groupApi.setStatus = (id, status) => groupApi.res.update(id, { status })
-groupApi.saveGroup = d => (d.id ? groupApi.res.update(d.id, d) : groupApi.res.add(d))
+groupApi.setStatus = (id, status) => groupApi.res.update(id, { status: String(status) === '1' ? '1' : '0' })
+groupApi.saveGroup = d => {
+  const payload = { ...d, status: String(d.status ?? '1') === '1' ? '1' : '0' }
+  return payload.id ? groupApi.res.update(payload.id, payload) : groupApi.res.add(payload)
+}
 
 /* ============================ 2. 佣金配置（commission-config） ============================ */
 // 6 项比例系数 + 阶梯区间 extentVoList(min/max/unitPrice) + 版本(startTime~endTime) + 关联服务。

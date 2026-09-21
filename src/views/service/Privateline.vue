@@ -121,7 +121,7 @@
             <el-button link type="primary" size="small" @click="handleAgent(row)">关联代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => handleSwitch(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => handleSwitch(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="handleCopy(row)">复制</el-button>
@@ -252,6 +252,7 @@ import PrivatelineForm from './components/privateline-form.vue'
 import PrivatelineSet from './components/privateline-set.vue'
 import PrivatelineLineGroup from './components/privateline-line-group.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import {
   privatelineApi, getCountryList, getProductList, getServiceSubtypeList, getAgentOptions,
   getRegionList, getFbastoreList, getContainerList, getStateByCountry, getAllAreaList,
@@ -290,7 +291,7 @@ const columns = [
   { prop: 'area', label: '目的地/区域', width: 130 },
   { prop: 'charge', label: '设置计费', width: 120 },
   { prop: 'agent', label: '关联代理商', width: 130 },
-  { prop: 'status', label: '启用状态', width: 100, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 const formatTargetCountrys = row => (row || []).map(item => item.countryName).join(',')

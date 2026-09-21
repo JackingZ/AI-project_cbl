@@ -28,7 +28,7 @@
           </template>
           <template #col-ifEnable="{ row }">
             <el-switch
-              :model-value="row.ifEnable"
+              :model-value="normalizeSwitchValue(row.ifEnable, 1, 0)"
               :active-value="1"
               :inactive-value="0"
               active-text="启用"
@@ -62,6 +62,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import Modal from '@/components/Common/Modal.vue'
 import { useListQuery } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import ExpressPortForm from './components/express-port-form.vue'
 import ExpressPortOil from './components/express-port-oil.vue'
 import {
@@ -87,7 +88,7 @@ const columns = [
   { prop: 'consignorCompany', label: '发货方公司', minWidth: 140 },
   { prop: 'consignor', label: '发货联系人', width: 120 },
   { prop: 'oil', label: '燃油费率', width: 100 },
-  { prop: 'ifEnable', label: '启用状态', width: 130, align: 'center' }
+  { prop: 'ifEnable', label: '启用状态', width: 150, align: 'center' }
 ]
 
 /* 下拉数据源 */

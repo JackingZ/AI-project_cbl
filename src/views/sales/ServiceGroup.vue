@@ -10,7 +10,7 @@
     <PageCard>
       <ProTable v-model:page="query.page" v-model:size="query.size" :data="list" :columns="columns" :loading="loading" :total="total" :action-width="150" @change="loadData">
         <template #col-status="{ row }">
-          <el-switch :model-value="row.status" active-value="1" inactive-value="0" @change="v => onStatus(row, v)" />
+          <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" @change="v => onStatus(row, v)" />
         </template>
         <template #actions="{ row }">
           <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openEdit(row)">编辑</el-button>
@@ -31,6 +31,7 @@ import PageCard from '@/components/Common/PageCard.vue'
 import ProTable from '@/components/Table/ProTable.vue'
 import GroupForm from './components/group-form.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { groupApi } from '@/api/modules/sales'
 
 defineOptions({ name: 'SalesGroup' })

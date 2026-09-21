@@ -88,7 +88,7 @@ const columns = [
   { prop: 'email', label: '电子邮箱', minWidth: 170 },
   { prop: 'region', label: '所在地区', minWidth: 170 },
   { prop: 'expire', label: '驾照日期', width: 120 },
-  { prop: 'status', label: '状态', width: 120, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 const rules = {

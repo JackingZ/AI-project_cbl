@@ -146,7 +146,7 @@ export function deleteExpressPort(ids = []) {
 // 状态切换（只传 id，服务端翻转 ifEnable 1/0）
 export function changeExpressStatus({ id } = {}) {
   const row = ports.res.raw().find(o => o.id === Number(id))
-  if (row) ports.update(id, { ifEnable: row.ifEnable === 1 ? 0 : 1 })
+  if (row) ports.update(id, { ifEnable: Number(row.ifEnable) === 1 ? 0 : 1 })
   return mockRequest(null)
 }
 

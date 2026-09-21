@@ -73,7 +73,7 @@
           :columns="columns"
           :loading="loading"
           :total="total"
-          :action-width="200"
+          :action-width="220"
           @change="loadData"
         >
           <template #col-status="{ row }">

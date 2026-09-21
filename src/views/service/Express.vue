@@ -75,7 +75,7 @@
             <el-button link type="primary" size="small" @click="handleAgent(row)">关联代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status, 1, 0)" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -167,6 +167,7 @@ import ExpressForm from './components/express-form.vue'
 import ExpressLocationCode from './components/express-location-code.vue'
 import ExpressDistinct from './components/express-distinct.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import {
   expressApi, getCountryList, getExpressCompany, getAgentOptions, getWarehouseList,
   getAllAreaList, getRegionList, getStateByCountry,
@@ -195,7 +196,7 @@ const columns = [
   { prop: 'address', label: '特殊配置', width: 120 },
   { prop: 'agent', label: '关联代理商', width: 150 },
   { prop: 'createTime', label: '添加时间', width: 180 },
-  { prop: 'status', label: '启用状态', width: 120, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 /* 筛选下拉数据源 */

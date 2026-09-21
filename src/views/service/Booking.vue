@@ -77,7 +77,7 @@
             <el-button link type="primary" size="small" :disabled="!can('edit')" @click="showServiceAgent(row)">航线代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -116,6 +116,7 @@ import BookingForm from './components/booking-form.vue'
 import BookingChargeDialog from './components/booking-charge-dialog.vue'
 import AirlineServiceProvider from './components/airline-service-provider.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import {
   bookingApi, getCountryList, getPortList, getBookingSvTypes, getServiceSubtypeList,
   getAgentOptions, CONVEYANCE_LIST, TRANS_TYPE_LIST, lookup
@@ -152,7 +153,7 @@ const columns = [
   { prop: 'chargeSide', label: '设置计费区间', width: 120 },
   { prop: 'chargeType', label: '设置计费类型', width: 120 },
   { prop: 'agent', label: '航线代理商', minWidth: 150 },
-  { prop: 'status', label: '启用状态', width: 120, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 /* transType 多值格式化（源 formatTrans：按 , 拆分映射拼名，重复空格分隔） */

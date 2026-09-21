@@ -29,7 +29,7 @@
         :columns="columns"
         :loading="loading"
         :total="total"
-        :action-width="280"
+        :action-width="200"
         @change="loadData"
       >
         <template #col-region="{ row }">{{ [row.state, row.city, row.county].filter(Boolean).join(' / ') }}</template>

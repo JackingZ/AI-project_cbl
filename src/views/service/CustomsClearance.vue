@@ -46,7 +46,7 @@
             <el-button link type="primary" size="small" :disabled="!can('edit')" @click="openAgent(row)">关联代理商</el-button>
           </template>
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -81,6 +81,7 @@ import RelevanceTransfer from '@/views/price/components/RelevanceTransfer.vue'
 import CustomsForm from './components/customs-form.vue'
 import CustomsTransferModal from './components/customs-transfer-modal.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { customsApi, getCountryList, getServiceSubtypeList, getCostItemList, getAgentOptions, SELECT_TYPE_LIST } from '@/api/modules/service'
 
 defineOptions({ name: 'SvcCustoms' })
@@ -104,7 +105,7 @@ const columns = [
   { prop: 'customs', label: '关联海关', width: 120 },
   { prop: 'agent', label: '关联代理商', width: 130 },
   { prop: 'createTime', label: '添加时间', width: 180 },
-  { prop: 'status', label: '启用状态', width: 130, align: 'center', fixed: 'right' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center', fixed: 'right' }
 ]
 
 /* 筛选下拉数据源 */

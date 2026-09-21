@@ -679,7 +679,16 @@ onMounted(setData)
 </script>
 
 <style lang="scss" scoped>
-.detail-form :deep(.el-form-item) { display: inline-block; width: 24.9%; }
+.detail-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  column-gap: 16px;
+
+  .form-title { grid-column: 1 / -1; }
+  :deep(.el-form-item) { width: 100%; min-width: 0; }
+  :deep(.el-form-item__label) { white-space: nowrap; }
+  :deep(.el-form-item__content) { min-width: 0; }
+}
 .input-number-valiate { width: 100%; }
 .input-number-valiate :deep(.el-input__inner) { text-align: left; }
 .input-capacity { display: flex; flex-direction: row; flex-wrap: nowrap; }

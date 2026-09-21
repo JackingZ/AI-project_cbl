@@ -27,7 +27,7 @@
             整块被注释，入口失效，此处保留说明不放开。
           -->
           <template #col-status="{ row }">
-            <el-switch :model-value="row.status" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
+            <el-switch :model-value="normalizeSwitchValue(row.status)" active-value="1" inactive-value="0" active-text="启用" inactive-text="禁用" :disabled="!can('edit')" @change="v => onStatus(row, v)" />
           </template>
           <template #actions="{ row }">
             <el-button link type="primary" size="small" :disabled="!can('add')" @click="openCopy(row)">复制</el-button>
@@ -55,6 +55,7 @@ import ProTable from '@/components/Table/ProTable.vue'
 import RelevanceTransfer from '@/views/price/components/RelevanceTransfer.vue'
 import WarehousingForm from './components/warehousing-form.vue'
 import { useListQuery, usePagePerms } from '@/utils/hooks'
+import { normalizeSwitchValue } from '@/utils/format'
 import { warehousingApi, getAgentOptions, SELECT_TYPE_LIST } from '@/api/modules/service'
 
 defineOptions({ name: 'SvcWarehousing' })
@@ -76,7 +77,7 @@ const columns = [
   { prop: 'abbr', label: '服务简称', minWidth: 120 },
   { prop: 'agent', label: '关联代理商', width: 130 },
   { prop: 'createTime', label: '添加时间', width: 180 },
-  { prop: 'status', label: '启用状态', width: 130, align: 'center' }
+  { prop: 'status', label: '启用状态', width: 150, align: 'center' }
 ]
 
 /* 内嵌编辑表单切换 */

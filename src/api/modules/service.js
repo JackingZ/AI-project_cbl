@@ -6,6 +6,20 @@
 import { defineMock, pad, at } from '../mockCrud'
 import { mockRequest, paginate } from '../mock'
 
+const normalizeStatus = (value, activeValue = '1', inactiveValue = '0') =>
+  String(value) === String(activeValue) ? activeValue : inactiveValue
+
+const saveStatusRecord = (api, data, activeValue = '1', inactiveValue = '0') => {
+  const payload = { ...data }
+  const hasStatus = payload.status != null && payload.status !== ''
+  if (hasStatus || !payload.id) {
+    payload.status = normalizeStatus(hasStatus ? payload.status : activeValue, activeValue, inactiveValue)
+  } else {
+    delete payload.status
+  }
+  return payload.id ? api.res.update(payload.id, payload) : api.res.add(payload)
+}
+
 /* ============================================================================
  * 一、共享字典
  * ========================================================================== */
@@ -308,8 +322,8 @@ expressApi.list = (p = {}) => expressApi.res.query(o =>
   (!p.name || String(o.name).includes(p.name)) &&
   (!p.code || String(o.expressCode).includes(p.code)),
   { page: p.page || 1, size: p.size || 10 })
-expressApi.save = d => (d.id ? expressApi.res.update(d.id, d) : expressApi.res.add(d))
-expressApi.changeStatus = (id, status) => expressApi.res.update(id, { status })
+expressApi.save = d => saveStatusRecord(expressApi, d, 1, 0)
+expressApi.changeStatus = (id, status) => expressApi.res.update(id, { status: normalizeStatus(status, 1, 0) })
 // 关联代理商 / 排除仓库（按 serviceId 存已选 id 列表）
 expressApi._agents = {}
 expressApi.getAgentById = id => mockRequest(expressApi._agents[id] || [])
@@ -409,8 +423,8 @@ bookingApi.list = (p = {}) => bookingApi.res.query(o =>
   (!p.name || String(o.name).includes(p.name)) &&
   (!p.serviceCode || String(o.serviceCode).includes(p.serviceCode)),
   { page: p.page || 1, size: p.size || 10 })
-bookingApi.save = d => (d.id ? bookingApi.res.update(d.id, d) : bookingApi.res.add(d))
-bookingApi.changeStatus = id => { const r = bookingApi.res.get; const cur = bookingApi.res.raw().find(o => o.id === Number(id)); if (cur) bookingApi.res.update(id, { status: cur.status === '1' ? '0' : '1' }); return mockRequest(null) }
+bookingApi.save = d => saveStatusRecord(bookingApi, d)
+bookingApi.changeStatus = id => { const cur = bookingApi.res.raw().find(o => o.id === Number(id)); if (cur) bookingApi.res.update(id, { status: String(cur.status) === '1' ? '0' : '1' }); return mockRequest(null) }
 attachAgent(bookingApi); attachPrice(bookingApi)
 // 航线服务商（按 bsId 存列表）
 bookingApi._trans = {}
@@ -451,8 +465,8 @@ customsApi.list = (p = {}) => customsApi.res.query(o =>
   (!p.name || String(o.name).includes(p.name)) &&
   (!p.code || String(o.csId).includes(p.code)),
   { page: p.page || 1, size: p.size || 10 })
-customsApi.save = d => (d.id ? customsApi.res.update(d.id, d) : customsApi.res.add(d))
-customsApi.changeStatus = (id, status) => customsApi.res.update(id, { status })
+customsApi.save = d => saveStatusRecord(customsApi, d)
+customsApi.changeStatus = (id, status) => customsApi.res.update(id, { status: normalizeStatus(status) })
 attachAgent(customsApi)
 // 关联成本项目（按 cscId）
 customsApi._cost = {}
@@ -512,8 +526,8 @@ truckApi.list = (p = {}) => truckApi.res.query(o =>
   (!p.code || String(o.ksId).includes(p.code)),
   { page: p.page || 1, size: p.size || 10 })
 truckApi.getById = id => { const r = truckApi.res.raw().find(o => o.id === Number(id)); return mockRequest(r ? { ...r } : {}) }
-truckApi.save = d => (d.id ? truckApi.res.update(d.id, d) : truckApi.res.add(d))
-truckApi.changeStatus = (id, status) => truckApi.res.update(id, { status })
+truckApi.save = d => saveStatusRecord(truckApi, d)
+truckApi.changeStatus = (id, status) => truckApi.res.update(id, { status: normalizeStatus(status) })
 attachAgent(truckApi)
 // 关联代理商下拉（cas 'A'，源 getCustTypeList → {custId,custName}，此处统一 {id,name}）
 truckApi.getAgents = subtypeId => mockRequest(AGENTS.map((n, i) => ({ id: `A${i + 1}`, name: n })))
@@ -575,8 +589,8 @@ trailerApi.list = (p = {}) => trailerApi.res.query(o =>
   (!p.code || String(o.tsId).includes(p.code)),
   { page: p.page || 1, size: p.size || 10 })
 trailerApi.getById = id => { const r = trailerApi.res.raw().find(o => o.id === Number(id)); return mockRequest(r ? { ...r } : {}) }
-trailerApi.save = d => (d.id ? trailerApi.res.update(d.id, d) : trailerApi.res.add(d))
-trailerApi.changeStatus = (id, status) => trailerApi.res.update(id, { status })
+trailerApi.save = d => saveStatusRecord(trailerApi, d)
+trailerApi.changeStatus = (id, status) => trailerApi.res.update(id, { status: normalizeStatus(status) })
 attachAgent(trailerApi)
 // 关联代理商下拉（cas 'A' typeId '06'，源 getCustTypeList→{custId,custName}，此处统一 {id,name}）
 trailerApi.getAgents = subtypeId => mockRequest(AGENTS.map((n, i) => ({ id: `A${i + 1}`, name: n })))
@@ -652,8 +666,8 @@ warehousingApi.list = (p = {}) => warehousingApi.res.query(o =>
   (!p.name || String(o.name).includes(p.name)) &&
   (!p.code || String(o.serviceCode).includes(p.code)),
   { page: p.page || 1, size: p.size || 10 })
-warehousingApi.save = d => (d.id ? warehousingApi.res.update(d.id, d) : warehousingApi.res.add(d))
-warehousingApi.changeStatus = (id, status) => warehousingApi.res.update(id, { status })
+warehousingApi.save = d => saveStatusRecord(warehousingApi, d)
+warehousingApi.changeStatus = (id, status) => warehousingApi.res.update(id, { status: normalizeStatus(status) })
 attachAgent(warehousingApi)
 
 /* ============================================================================
@@ -693,8 +707,8 @@ privatelineApi.list = (p = {}) => privatelineApi.res.query(o =>
   (!p.name || String(o.name).includes(p.name)),
   { page: p.page || 1, size: p.size || 10 })
 privatelineApi.getById = id => { const r = privatelineApi.res.raw().find(o => o.id === Number(id)); return mockRequest(r ? { ...r } : {}) }
-privatelineApi.save = d => (d.id ? privatelineApi.res.update(d.id, d) : privatelineApi.res.add(d))
-privatelineApi.changeStatus = (id, status) => privatelineApi.res.update(id, { status })
+privatelineApi.save = d => saveStatusRecord(privatelineApi, d)
+privatelineApi.changeStatus = (id, status) => privatelineApi.res.update(id, { status: normalizeStatus(status) })
 attachAgent(privatelineApi); attachPrice(privatelineApi)
 // 关联代理商下拉（cas 'A' typeId '05'，源 getCustTypeList→{custId,custName}）
 privatelineApi.getAgents = subtypeId => mockRequest(AGENTS.map((n, i) => ({ id: `A${i + 1}`, name: n })))
@@ -731,8 +745,8 @@ export const lineGroupApi = defineMock('svc_line_group_v2', () =>
     }
   }), [], 1)
 lineGroupApi.list = (p = {}) => lineGroupApi.res.query(() => true, { page: p.page || 1, size: p.size || 10 })
-lineGroupApi.save = d => (d.id ? lineGroupApi.res.update(d.id, d) : lineGroupApi.res.add(d))
-lineGroupApi.changeStatus = (id, status) => lineGroupApi.res.update(id, { status })
+lineGroupApi.save = d => saveStatusRecord(lineGroupApi, d)
+lineGroupApi.changeStatus = (id, status) => lineGroupApi.res.update(id, { status: normalizeStatus(status) })
 // 编辑回显：组内已关联服务（源 getLscGroupItems，返回 [{id,name}]）
 lineGroupApi.getItems = id => {
   const r = lineGroupApi.res.raw().find(o => o.id === Number(id)) || {}
@@ -740,4 +754,3 @@ lineGroupApi.getItems = id => {
   const names = (r.lscName || '').split('、')
   return mockRequest(ids.map((lid, i) => ({ id: lid, name: names[i] || lid })))
 }
-
