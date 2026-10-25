@@ -6,7 +6,8 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
-  base: '/AI-project_cbl/',
+  root: 'src',
+  base: '/AI-project_cbl/dist/',
   plugins: [
     vue(),
     // Element Plus 按需引入：组件/指令(v-loading)自动注册，
@@ -29,6 +30,8 @@ export default defineConfig({
   },
   server: { port: 5173, open: true },
   build: {
+    outDir: '../dist',
+    emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
