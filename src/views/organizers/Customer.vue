@@ -552,7 +552,7 @@ const defaultForm = () => ({
   custSource: '业务开发', legal: '', certType: '营业执照', certNumber: '', licenseCode: '', licenseAddress: '', setupDate: '',
   companySize: '', registeredCapital: '', saleType: '直销', platformType: '线下',
   platform: '独立站', shopUrl: '', brand: '', famousMark: '否',
-  audit: '待审核', status: '启用', parentName: '聚货通总部'
+  audit: '待审核', status: '启用', parentName: 'SYSTEM总部'
 })
 const form = reactive(defaultForm())
 

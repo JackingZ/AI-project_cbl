@@ -7,8 +7,8 @@
 ## 筛选项
 | 项 | 源 | 目标 | 结论 |
 |----|----|----|----|
-| 公司类型 tag | 有（typeList 按 custType 动态：聚货通/代理商/供应商等）| 有 custType select(CUST_TYPES) | 【刻意简化】源多层级动态，目标静态 |
-| 分公司 comId（tag==='4'）| 有 | 无 | 【刻意简化】单公司(聚货通总部)模型 |
+| 公司类型 tag | 有（typeList 按 custType 动态：SYSTEM/代理商/供应商等）| 有 custType select(CUST_TYPES) | 【刻意简化】源多层级动态，目标静态 |
+| 分公司 comId（tag==='4'）| 有 | 无 | 【刻意简化】单公司(SYSTEM总部)模型 |
 | 所属公司 custId select | 有（动态加载）| 有 custName select（静态 custNameOptions）| 命名差异 custId→custName；一致 |
 | 所属部门 deptId el-tree-select | 有（树选择）| 有 dept select（扁平 deptOptions）| 组件差异：tree-select → 普通 select |
 | 状态 select（启用中/已禁用）| 有 | 有（STATUS_OPTIONS）| 一致 |
@@ -47,7 +47,7 @@
 |----|----|----|----|
 | 公司类型 tag | 有(!isEdit)| 无 | 【刻意简化】|
 | 分公司 comId | 有(tag==='4')| 无 | 【刻意简化】|
-| 所属公司 custId/custName | 有（新增 select 动态/编辑 disabled input）| 有 disabled input「聚货通总部」写死 | 【刻意简化】单公司 |
+| 所属公司 custId/custName | 有（新增 select 动态/编辑 disabled input）| 有 disabled input「SYSTEM总部」写死 | 【刻意简化】单公司 |
 | 所属部门 deptId | 有 el-tree-select | 有 deptName select（普通）| 组件差异；命名 deptId→deptName |
 | 所属岗位 postId | 有 select(动态 positionList，非必填)| 有 postName select(POST_OPTIONS，必填 rules)| 命名差异；目标改为必填【差异】|
 | 用户姓名 realName | 有(maxlength20)| 有 | 一致 |

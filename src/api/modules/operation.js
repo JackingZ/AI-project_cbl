@@ -399,9 +399,9 @@ subtypeApi.list = (p = {}) => subtypeApi.res.query(
 // 服务大类下拉选项（供任务单证/岗位设置等关联，取 generaApi 种子名）
 export const SERVICE_TYPES = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `服务大类${pad(i + 1)}` }))
 
-// 公司/企业类型选项（0聚货通/1客户/2代理商/3供应商）— 供岗位设置/服务大类/服务机构等复用
+// 公司/企业类型选项（0SYSTEM/1客户/2代理商/3供应商）— 供岗位设置/服务大类/服务机构等复用
 export const ORG_TYPE_OPTIONS = [
-  { value: '0', label: '聚货通' }, { value: '1', label: '客户' },
+  { value: '0', label: 'SYSTEM' }, { value: '1', label: '客户' },
   { value: '2', label: '代理商' }, { value: '3', label: '供应商' }
 ]
 // 岗位类别选项（源字典 POST_TYPE1，占位）

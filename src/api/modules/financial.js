@@ -88,10 +88,10 @@ export const SERVICE_LIST = [
 // 本币金额：金额 × 汇率，保留 2 位
 export const countNum = (amount, exRate) => Number(((Number(amount) || 0) * (Number(exRate) || 0)).toFixed(2))
 export const lookup = (list, id) => (list.find(x => String(x.id) === String(id)) || {}).name || '--'
-// 客户属性映射（type/subtype → 文案）：0聚货通/3供应商/2-1一级代理/2-2二级代理/1-0直客/1-1同行
+// 客户属性映射（type/subtype → 文案）：0SYSTEM/3供应商/2-1一级代理/2-2二级代理/1-0直客/1-1同行
 export function clientProperty(type, subtype) {
   const t = String(type)
-  if (t === '0') return '聚货通'
+  if (t === '0') return 'SYSTEM'
   if (t === '3') return '供应商'
   if (t === '2') return String(subtype) === '2' ? '二级代理' : '一级代理'
   if (t === '1') return String(subtype) === '1' ? '同行' : '直客'
@@ -336,7 +336,7 @@ export const riskOrderApi = defineMock('fin_risk_order', () =>
     return {
       id: i + 1, code: `KP${600000 + i}`, type,
       lscValue: `${at(['美国', '欧洲', '日本'], i)}专线`,
-      custName: at(CLIENTS, i), buyerName: at(CLIENTS, i + 1), sellerName: '聚货通总部',
+      custName: at(CLIENTS, i), buyerName: at(CLIENTS, i + 1), sellerName: 'SYSTEM总部',
       createTime: dtime(i), freezeRemark: i % 3 === 0 ? '信用额度不足冻结' : '',
       warehouseName: `${at(['深圳', '广州', '东莞'], i)}仓`, customs0: String(i % 2),
       pickType: String(i % 4), deliveryWay: String(i % 4), packages: (i % 50) + 5,
@@ -374,7 +374,7 @@ export const finOrderApi = defineMock('fin_line_order', () =>
       id: i + 1, code: `KP${700000 + i}`, custName: at(CLIENTS, i), custType: String(i % 2),
       orderStatusName: at(['已下单', '已入仓', '运输中', '已到港', '已签收'], i),
       describe: '', updateAt: dtime(i), createTime: dtime(i), wsInTime: dstr(i, 1),
-      wareHouseAt: `${at(['深圳', '广州'], i)}仓`, buyerName: at(CLIENTS, i + 1), sellerName: '聚货通总部',
+      wareHouseAt: `${at(['深圳', '广州'], i)}仓`, buyerName: at(CLIENTS, i + 1), sellerName: 'SYSTEM总部',
       salesman: at(['业务A', '业务B', '业务C'], i), finances: at(['财务A', '财务B'], i), customers: at(['客服A', '客服B'], i),
       addressType: String(i % 3), country: at(['美国', '德国', '日本'], i), province: '加州', city: '洛杉矶',
       warehouse: at(['ONT8', 'LAX9', 'FRA3'], i), lscValue: `${at(['美国', '欧洲', '日本'], i)}专线`,

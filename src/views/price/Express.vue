@@ -105,7 +105,7 @@
                   <el-option v-for="item in serviceList2" :key="item.id" :label="item.label" :value="item.id" />
                 </el-select>
               </el-form-item>
-              <el-form-item label="报价对象">聚货通</el-form-item>
+              <el-form-item label="报价对象">SYSTEM</el-form-item>
             </el-col>
             <el-col :span="6" style="text-align: right">
               <template v-if="!isHistory && selectForm.status !== '2'">

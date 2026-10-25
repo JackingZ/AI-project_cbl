@@ -65,7 +65,7 @@
     <FormDrawer v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item label="所属公司">
-          <el-input model-value="聚货通总部" disabled />
+          <el-input model-value="SYSTEM总部" disabled />
         </el-form-item>
         <el-form-item label="所属部门" prop="deptName">
           <el-select v-model="form.deptName" placeholder="请选择部门" style="width: 100%">
@@ -169,7 +169,7 @@ const rules = {
 
 const formRef = ref(null)
 const dialog = reactive({ visible: false, title: '', loading: false, isEdit: false, id: null })
-const defaultForm = () => ({ realName: '', username: '', password: '', forceReset: false, phone: '', custName: '聚货通总部', deptName: '', postName: '', roleName: '', status: '启用' })
+const defaultForm = () => ({ realName: '', username: '', password: '', forceReset: false, phone: '', custName: 'SYSTEM总部', deptName: '', postName: '', roleName: '', status: '启用' })
 const form = reactive(defaultForm())
 
 const loadData = async () => {

@@ -4,7 +4,7 @@ import { createResource } from '../persist'
 import { mockRequest } from '../mock'
 
 /* ============ 公共枚举 / 选项 ============ */
-export const CUST_TYPES = ['聚货通', '客户', '代理商', '供应商']
+export const CUST_TYPES = ['SYSTEM', '客户', '代理商', '供应商']
 export const CUSTOMER_SUBTYPES = ['直客', '同行']
 export const ENTITY_TYPES = ['个人', '企业']
 export const AUDIT_STATUS = ['待审核', '已通过', '已拒绝']
@@ -284,10 +284,10 @@ const ROLE_MENU_PERMS = {
 const roleResource = createResource('org_role', () =>
   [
     // menuPerms: 该角色可见的页面完整 path 数组；['*'] 表示全部菜单
-    { id: 1, name: '超级管理员', custType: '聚货通', perms: ['org_role_add', 'org_role_edit', 'org_role_del', 'org_person_add'], menuPerms: ROLE_MENU_PERMS['超级管理员'], remark: '系统内置', createTime: '2024-01-01 09:00:00' },
-    { id: 2, name: '运营主管', custType: '聚货通', perms: ['order_whole_view', 'order_whole_export'], menuPerms: ROLE_MENU_PERMS['运营主管'], remark: '', createTime: '2024-02-10 09:00:00' },
+    { id: 1, name: '超级管理员', custType: 'SYSTEM', perms: ['org_role_add', 'org_role_edit', 'org_role_del', 'org_person_add'], menuPerms: ROLE_MENU_PERMS['超级管理员'], remark: '系统内置', createTime: '2024-01-01 09:00:00' },
+    { id: 2, name: '运营主管', custType: 'SYSTEM', perms: ['order_whole_view', 'order_whole_export'], menuPerms: ROLE_MENU_PERMS['运营主管'], remark: '', createTime: '2024-02-10 09:00:00' },
     { id: 3, name: '客服专员', custType: '客户', perms: ['order_whole_view'], menuPerms: ROLE_MENU_PERMS['客服专员'], remark: '', createTime: '2024-03-05 09:00:00' },
-    { id: 4, name: '财务专员', custType: '聚货通', perms: ['fin_recv_view', 'fin_pay_view'], menuPerms: ROLE_MENU_PERMS['财务专员'], remark: '', createTime: '2024-03-20 09:00:00' },
+    { id: 4, name: '财务专员', custType: 'SYSTEM', perms: ['fin_recv_view', 'fin_pay_view'], menuPerms: ROLE_MENU_PERMS['财务专员'], remark: '', createTime: '2024-03-20 09:00:00' },
     { id: 5, name: '代理商管理员', custType: '代理商', perms: [], menuPerms: ROLE_MENU_PERMS['代理商管理员'], remark: '', createTime: '2024-04-01 09:00:00' }
   ]
 )
@@ -302,7 +302,7 @@ roleResource.raw().forEach(r => {
 /* ============ 部门管理（树） ============ */
 const deptResource = createResource('org_dept', () =>
   [
-    { id: 1, parentId: 0, name: '聚货通总部', alias: 'JHT-HQ', manager: '张伟', remark: '', createTime: '2024-01-01 09:00:00' },
+    { id: 1, parentId: 0, name: 'SYSTEM总部', alias: 'JHT-HQ', manager: '张伟', remark: '', createTime: '2024-01-01 09:00:00' },
     { id: 2, parentId: 1, name: '运营中心', alias: 'Operation', manager: '李强', remark: '', createTime: '2024-01-02 09:00:00' },
     { id: 3, parentId: 1, name: '财务部', alias: 'Finance', manager: '王芳', remark: '', createTime: '2024-01-02 09:00:00' },
     { id: 4, parentId: 2, name: '客服组', alias: 'Service', manager: '赵敏', remark: '', createTime: '2024-01-03 09:00:00' },
@@ -314,9 +314,9 @@ const deptResource = createResource('org_dept', () =>
 /* ============ 人员管理 ============ */
 const DEPT_NAMES = ['运营中心', '财务部', '客服组', '调度组', '出纳组']
 const ROLE_NAMES = ['运营主管', '客服专员', '财务专员', '代理商管理员']
-// 人员所属公司池：聚货通总部 + 各类型下属公司，令超管可见全部公司人员
+// 人员所属公司池：SYSTEM总部 + 各类型下属公司，令超管可见全部公司人员
 const CUST_POOL = [
-  { custType: '聚货通', custName: '聚货通总部' },
+  { custType: 'SYSTEM', custName: 'SYSTEM总部' },
   { custType: '客户', custName: '美国01贸易有限公司' },
   { custType: '客户', custName: '德国02贸易有限公司' },
   { custType: '代理商', custName: '美国01物流代理' },
@@ -327,7 +327,7 @@ const CUST_POOL = [
 const personnelResource = createResource('org_personnel', () =>
   Array.from({ length: 30 }, (_, i) => {
     /* seed v2: 人员跨公司分布 */
-    // 前 8 人固定为聚货通总部（含 admin），其余轮转分布到各类型公司
+    // 前 8 人固定为SYSTEM总部（含 admin），其余轮转分布到各类型公司
     const cust = i < 8 ? CUST_POOL[0] : CUST_POOL[((i - 8) % (CUST_POOL.length - 1)) + 1]
     return {
       id: i + 1,
@@ -361,7 +361,7 @@ const customerResource = createResource('org_customer', () =>
       country: r.country, state: r.state, city: r.city, county: r.county,
       contact: `联系人${pad(i + 1)}`,
       phone: `139${String(20000000 + i * 211).slice(0, 8)}`,
-      parentName: i % 3 === 0 ? '聚货通总部' : `${pick(COUNTRIES, i + 1)}一级代理`,
+      parentName: i % 3 === 0 ? 'SYSTEM总部' : `${pick(COUNTRIES, i + 1)}一级代理`,
       branch: pick(SUPPLIER_BRANCH, i),
       certType: pick(CERT_TYPES, i),
       certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 137).slice(0, 15)}`,
@@ -408,7 +408,7 @@ const agentResource = createResource('org_agent', () =>
       certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 211).slice(0, 15)}`,
       licenseAddress: `${r.country}${r.city}${pick(['物流园', '货运中心', '保税区'], i)}${i + 1}号`,
       setupDate: `20${pad(15 + (i % 8))}-${pad((i % 12) + 1)}-15`,
-      parentName: '聚货通总部',
+      parentName: 'SYSTEM总部',
       domain: `agent${pad(i + 1)}`,
       markPrefix: `MK${pad(i + 1)}`,
       printServer: `http://print${pad(i + 1)}.jht.com`,
@@ -457,7 +457,7 @@ const supplierResource = createResource('org_supplier', () =>
       certNumber: `${pick(['110', '310', '440'], i)}${String(101010199001010000 + i * 331).slice(0, 15)}`,
       licenseAddress: `${r.country}${r.city}${pick(['供应链园区', '仓储中心', '产业基地'], i)}${i + 1}号`,
       setupDate: `20${pad(14 + (i % 9))}-${pad((i % 12) + 1)}-20`,
-      parentName: '聚货通总部',
+      parentName: 'SYSTEM总部',
       coopPeriod: [`2024-${pad((i % 12) + 1)}-01`, `20${26 + (i % 3)}-${pad((i % 12) + 1)}-01`],
       ifRequestPay: pick(YES_NO, i),
       domainPrefix: `sp${pad(i + 1)}`,
@@ -541,7 +541,7 @@ export function addCustomer(data) { return customerResource.add(data) }
 export function bulkImportCustomer(rows = []) {
   const normalized = rows.map(r => ({
     subtype: '直客', entity: '企业', contract: '未签署', audit: '待审核',
-    status: '启用', parentName: '聚货通总部', ...r
+    status: '启用', parentName: 'SYSTEM总部', ...r
   }))
   return customerResource.bulkAdd(normalized)
 }
@@ -562,9 +562,9 @@ export function updateAgent(id, data) { return agentResource.update(id, data) }
 export function deleteAgent(id) { return agentResource.remove(id) }
 export function toggleAgentStatus(id, status) { return agentResource.setStatus(id, status) }
 
-// 可选上级公司（客户“修改归属”用）：聚货通总部 + 全部代理商
+// 可选上级公司（客户“修改归属”用）：SYSTEM总部 + 全部代理商
 export function getParentCompanyOptions() {
-  return mockRequest(['聚货通总部', ...agentResource.raw().map(a => a.name)])
+  return mockRequest(['SYSTEM总部', ...agentResource.raw().map(a => a.name)])
 }
 
 /* ---- 供应商 ---- */

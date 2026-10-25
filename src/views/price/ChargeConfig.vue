@@ -168,7 +168,7 @@ const total = ref(0)
 const loading = ref(false)
 const query = reactive({ page: 1, size: 10 })
 
-// 系统内置：agent.key === '0' 且当前公司非聚货通时不可编辑；此处 mock 简化为 agent.key==='0' 即内置
+// 系统内置：agent.key === '0' 且当前公司非SYSTEM时不可编辑；此处 mock 简化为 agent.key==='0' 即内置
 const isBuiltin = row => (row.agent || {}).key === '0'
 
 const loadData = async () => {
@@ -236,7 +236,7 @@ const submit = async () => {
   }
   dialog.loading = true
   try {
-    const payload = { ...form, type: chargeType.value, agent: { key: 'C1', value: '聚货通' } }
+    const payload = { ...form, type: chargeType.value, agent: { key: 'C1', value: 'SYSTEM' } }
     if (dialog.isEdit) payload.id = dialog.id
     await chargeApi.save(payload)
     ElMessage.success('保存成功!')

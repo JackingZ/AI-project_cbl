@@ -228,7 +228,7 @@
             </el-col>
           </el-row>
 
-          <!-- 区间/区域配置（源 custType==='3' 聚货通才显示；mock 保留入口，编辑态可点） -->
+          <!-- 区间/区域配置（源 custType==='3' SYSTEM才显示；mock 保留入口，编辑态可点） -->
           <el-row v-if="isAdd || isEdit">
             <el-form-item v-if="selectForm.lscId && rangeTitle" :label="rangeTitle" class="is-required">
               <el-button type="primary" size="small" plain @click="onRangeReset">{{ rangeTitle }}</el-button>

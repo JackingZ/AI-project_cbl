@@ -163,7 +163,7 @@ import {
 
 defineOptions({ name: 'SalesCommission' })
 const { can } = usePagePerms()
-// 登录 custType 固定 mock（聚货通 '0'）
+// 登录 custType 固定 mock（SYSTEM '0'）
 const custType = ref('0')
 
 const companyList = ref([])

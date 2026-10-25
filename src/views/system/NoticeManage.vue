@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageCard title="通知管理">
-      <p class="notice-mng__tip">配置各通知项对四类客户（聚货通 / 供应商 / 代理商 / 客户）的启用与关联服务，并维护通知模版。</p>
+      <p class="notice-mng__tip">配置各通知项对四类客户（SYSTEM / 供应商 / 代理商 / 客户）的启用与关联服务，并维护通知模版。</p>
       <ProTable
         v-model:page="query.page"
         v-model:size="query.size"

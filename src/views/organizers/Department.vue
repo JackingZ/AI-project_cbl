@@ -28,7 +28,7 @@
     <FormDrawer v-model="dialog.visible" :title="dialog.title" :confirm-loading="dialog.loading" @confirm="submit">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item label="所属公司">
-          <el-input model-value="聚货通总部" disabled />
+          <el-input model-value="SYSTEM总部" disabled />
         </el-form-item>
         <el-form-item label="上级部门" prop="parentId">
           <el-tree-select

@@ -290,7 +290,7 @@ const serviceList = ref([])
 const serviceList2 = ref([])
 
 const auditDot = a => (a === 1 ? 'card-tip-blue' : a === 2 ? 'card-tip-y' : a === 3 ? 'card-tip-red' : 'card-tip-success')
-const custTag = item => { const t = item.toCustType; const s = item.toCustSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '3') return '聚货通价'; return '' }
+const custTag = item => { const t = item.toCustType; const s = item.toCustSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '3') return 'SYSTEM价'; return '' }
 const formatFrom = item => item.addressType === '4' ? `${item.country?.countryName || ''}${item.country?.stateName || ''}${item.country?.cityName || ''}` : `${item.city || ''} ${item.addressName || ''}`
 
 const getTableData = async (p) => {

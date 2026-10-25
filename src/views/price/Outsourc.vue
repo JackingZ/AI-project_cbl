@@ -126,7 +126,7 @@
                   <el-option v-for="item in serviceSelList" :key="item.id" :label="item.label" :value="item.id" />
                 </el-select>
               </el-form-item>
-              <!-- 所属公司：仅 custType 0（聚货通）显示 -->
+              <!-- 所属公司：仅 custType 0（SYSTEM）显示 -->
               <el-form-item v-if="custType === '0'" label="所属公司" prop="agentId" label-width="80px">
                 <el-select v-model="selectForm.agentId" :disabled="isView" style="width: 160px" clearable filterable placeholder="请选择" @focus="getAgentOptions">
                   <el-option v-for="item in agentList" :key="item.id" :label="item.name" :value="item.id" />
@@ -250,7 +250,7 @@ import {
 defineOptions({ name: 'PriceOutsourc' })
 const { can } = usePagePerms()
 
-// 当前登录客户类型（mock：聚货通 '0'，显示“所属公司”）
+// 当前登录客户类型（mock：SYSTEM '0'，显示“所属公司”）
 const custType = '0'
 
 const cardList = ref([])

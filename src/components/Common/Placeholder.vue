@@ -4,7 +4,7 @@
       <template #image>
         <el-icon :size="60" color="#C0C4CC"><Coin /></el-icon>
       </template>
-      <p class="placeholder-tip">该模块页面尚未从聚货通迁移，菜单与路由已就位。</p>
+      <p class="placeholder-tip">该模块页面尚未从SYSTEM迁移，菜单与路由已就位。</p>
     </el-empty>
   </PageCard>
 </template>

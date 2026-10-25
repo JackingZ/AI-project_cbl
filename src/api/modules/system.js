@@ -275,9 +275,9 @@ noticeCtrApi.list = (p = {}) => noticeCtrApi.res.query(o =>
   { page: p.page || 1, size: p.size || 10 })
 
 // 通知管理：源为「通知项 × 四类客户关联服务(穿梭) + 通知模版」配置页
-// 四类客户：聚货通/供应商/代理商/客户，各含 启用开关 + 已关联服务数
+// 四类客户：SYSTEM/供应商/代理商/客户，各含 启用开关 + 已关联服务数
 export const NOTICE_CUST_TYPES = [
-  { key: 'jht', label: '聚货通' },
+  { key: 'jht', label: 'SYSTEM' },
   { key: 'supplier', label: '供应商' },
   { key: 'agent', label: '代理商' },
   { key: 'customer', label: '客户' }
@@ -296,7 +296,7 @@ export const noticeMngApi = defineMock('sys_noticemng', () =>
   })), [], 3)
 
 // 状态设置：源为「状态-角色权限矩阵」——按服务大类/排序筛选，每状态配置 5 角色 × (仅查看/可下载)
-export const STATUS_ROLES = ['供应商', '聚货通', '一级代理商', '二级代理商', '客户']
+export const STATUS_ROLES = ['供应商', 'SYSTEM', '一级代理商', '二级代理商', '客户']
 export const STATUS_SERVICE_TYPES = ['仓储', '专线', '卡车', '拖车', '快递', '订舱', '报关']
 export const statusApi = defineMock('sys_status', () =>
   Array.from({ length: 14 }, (_, i) => ({
@@ -306,8 +306,8 @@ export const statusApi = defineMock('sys_status', () =>
     statusType: at(STATUS_SERVICE_TYPES, i),
     describes: `${at(['订单已创建', '货物已入仓', '货物运输中', '货物已到港', '客户已签收', '流程已完成'], i)}的状态节点`,
     fileDownload: i % 2, // 1 是 / 0 否
-    viewRoles: i % 2 === 0 ? ['聚货通', '客户'] : ['聚货通', '一级代理商', '客户'],
-    fileRoles: i % 2 === 1 ? ['聚货通', '客户'] : [],
+    viewRoles: i % 2 === 0 ? ['SYSTEM', '客户'] : ['SYSTEM', '一级代理商', '客户'],
+    fileRoles: i % 2 === 1 ? ['SYSTEM', '客户'] : [],
     createTime: seedTime(i)
   })), [], 3)
 // 状态按 服务大类 过滤 + 排序(升/降)

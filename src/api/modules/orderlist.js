@@ -20,10 +20,10 @@ export const COUNTRIES = ['美国', '德国', '日本', '英国', '澳大利亚'
 export const PORTS = ['深圳港', '上海港', '宁波港', '洛杉矶港', '汉堡港', '东京港']
 // 派生列所需中文枚举（保留中文串，占位对齐参考）
 export const ORDER_TYPES = ['销售', '采购']
-export const COMPANY_TYPES = ['聚货通', '客户', '代理商', '供应商']
+export const COMPANY_TYPES = ['SYSTEM', '客户', '代理商', '供应商']
 // 所属公司选项（静态占位，与公司类型一致做下拉，不参与真实过滤）
 export const COMPANY_NAMES = [
-  '聚货通总部', '环球物流贸易', '速达国际电商', '安通供应链',
+  'SYSTEM总部', '环球物流贸易', '速达国际电商', '安通供应链',
   '华东一级代理', '华南二级代理', '远洋货代', '深圳跨境仓储'
 ]
 export const ORDER_SOURCES = ['线上下单', '代客下单', '接口对接']
@@ -40,7 +40,7 @@ export const DECLARE_TYPES = ['进口报关', '出口报关', '转关']
 export const BILL_STATUS = ['未出账', '已出账', '已核销']
 export const SERVICES = ['美国专线', '欧洲专线', '日本专线', '空运特快', '海运普船']
 export const FBA_WAREHOUSES = ['ONT8', 'LAX9', 'JFK8', 'FRA3', 'NRT5']
-export const TOP_AGENTS = ['聚货通总部', '华南一级代理', '华东一级代理']
+export const TOP_AGENTS = ['SYSTEM总部', '华南一级代理', '华东一级代理']
 export const SERVICE_TERMS = ['CIF', 'FOB', 'EXW', 'DDP', 'DDU']
 export const GOODS_CLAUSES = ['电放', '正本', 'HBL', 'MBL']
 // 调度任务订单状态（对齐源 allocationCat statusList）

@@ -229,7 +229,7 @@ const defaultForm = () => ({
   name: '', abbr: '', alias: '', code: '', branch: '总部', subtype: '快递', region: [],
   legal: '', licenseCode: '', certType: '营业执照', certNumber: '', licenseAddress: '',
   setupDate: '', coopPeriod: [],
-  domainPrefix: '', ifRequestPay: '是', status: '启用', parentName: '聚货通总部'
+  domainPrefix: '', ifRequestPay: '是', status: '启用', parentName: 'SYSTEM总部'
 })
 const form = reactive(defaultForm())
 

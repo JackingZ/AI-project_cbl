@@ -93,8 +93,8 @@ const COUNTRIES = [
 ]
 const CLIENTS = ['深圳华通贸易', '广州速卖电商', '上海远洋供应链', '义乌小商品', '东莞跨境优选', '杭州云仓科技']
 const COMPANIES = [
-  { id: 'C1', name: '聚货通深圳总公司' }, { id: 'C2', name: '聚货通广州分公司' },
-  { id: 'C3', name: '聚货通上海分公司' }, { id: 'C4', name: '聚货通义乌分公司' }
+  { id: 'C1', name: 'SYSTEM深圳总公司' }, { id: 'C2', name: 'SYSTEM广州分公司' },
+  { id: 'C3', name: 'SYSTEM上海分公司' }, { id: 'C4', name: 'SYSTEM义乌分公司' }
 ]
 const DEPARTMENTS = [
   { id: 'D1', name: '空运事业部', parentId: 'C1' }, { id: 'D2', name: '海运事业部', parentId: 'C1' },
@@ -202,7 +202,7 @@ const buildOrderSeed = n => Array.from({ length: n }, (_, i) => {
     orderStatus_name: at(['已下单', '已入仓', '运输中', '已到港', '已签收'], i),
     orderStatus_describe: `状态描述${i}`, orderStatus_updateAt: dtime(i),
     createTime: dtime(i), wsInTime: dstr(i, 1), wareHouseAt: `${at(['深圳', '广州', '东莞'], i)}仓`,
-    buyer: { name: at(CLIENTS, i + 1) }, seller: { name: '聚货通总部' },
+    buyer: { name: at(CLIENTS, i + 1) }, seller: { name: 'SYSTEM总部' },
     salesman: at(['张业务', '李业务', '王业务'], i), finances: at(['赵财务', '孙财务'], i), customers: at(['钱客服', '周客服'], i),
     addressType: String(i % 3),
     consignee: { country: country.name, province: at(['加州', '巴伐利亚', '东京都'], i), city: at(['洛杉矶', '慕尼黑', '东京'], i) },

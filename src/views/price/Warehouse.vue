@@ -97,7 +97,7 @@
               </el-form-item>
               <el-form-item label="报价对象">
                 <span v-if="custType === '0'">一级代理商</span>
-                <!--<div v-else-if="custType === '3'">聚货通</div>-->
+                <!--<div v-else-if="custType === '3'">SYSTEM</div>-->
                 <el-select v-else v-model="selectForm.toCustSubtype" :disabled="isEdit || !isAdd" style="width: 120px" clearable placeholder="请选择" @change="onType">
                   <el-option v-for="item in custList" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
@@ -247,7 +247,7 @@
       @save="saveCompany"
     />
 
-    <!-- 供应商报价浮层：仅聚货通（custType 0） -->
+    <!-- 供应商报价浮层：仅SYSTEM（custType 0） -->
     <div v-show="isRightShow && custType === '0' && can('quotation')" class="agent-price" @click="showAgentPrice">
       <el-tooltip effect="dark" content="供应商报价" placement="top"><el-icon><Money /></el-icon></el-tooltip>
     </div>
@@ -272,7 +272,7 @@ import {
 defineOptions({ name: 'PriceWarehouse' })
 const { can } = usePagePerms()
 
-// 当前登录用户客户类型（mock：聚货通 '0'，与其它价格页一致）
+// 当前登录用户客户类型（mock：SYSTEM '0'，与其它价格页一致）
 const custType = '0'
 
 const cardList = ref([])
@@ -286,7 +286,7 @@ const warehouseList = ref([])
 const warehouseSelList = ref([])
 
 const auditDot = a => (a === 1 ? 'card-tip-blue' : a === 2 ? 'card-tip-y' : a === 3 ? 'card-tip-red' : 'card-tip-success')
-const custTag = item => { const t = item.toCustType; const s = item.toCustSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '0') return '聚货通价'; return '' }
+const custTag = item => { const t = item.toCustType; const s = item.toCustSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '0') return 'SYSTEM价'; return '' }
 const formatType = t => lookup(SETTLEMENT_LIST, t)
 const cellConfig = row => { if (row.type === '5' || row.type === '6') return row.cellName || '--'; if (row.min != null && row.max != null) return `${row.min}-${row.max}`; return '单位单价' }
 const umWeightLabel = v => ({ T: 'T-吨', LBS: 'LB-磅', KGS: 'KG-公斤', OZS: 'OZ-盎' }[v] || v || '--')

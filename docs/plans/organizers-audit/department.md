@@ -33,7 +33,7 @@
 ## 新增/编辑表单（edit-department.vue → 目标 FormDrawer）
 | 字段 | 源 | 目标 | 结论 |
 |----|----|----|----|
-| 所属公司 custName | 有（disabled input，取 UserModule.custName）| 有（disabled input 写死「聚货通总部」）| 一致（刻意简化单公司）|
+| 所属公司 custName | 有（disabled input，取 UserModule.custName）| 有（disabled input 写死「SYSTEM总部」）| 一致（刻意简化单公司）|
 | 上级部门 parentId | 有 el-tree-select（不能选自己，isEdit===2 禁用）| 有 el-tree-select(parentOptions 带「顶级部门」根，必填)| 一致；目标必填 |
 | 部门名称 name | 有(maxlength50，必填)| 有(必填)| 一致 |
 | 英文名称 alias | 有(maxlength50，校验不能中文)| 有(无中文校验)| 一致；缺中文校验 |
@@ -46,5 +46,5 @@
   2. 目标表格多「英文名称/部门主管」两列（源仅名称+时间）。
   3. 目标新增「部门名称过滤」搜索、「新增下级」按钮。
 - 缺失保护：源对当前用户所属部门(deptId===row.id)隐藏编辑/删除，目标未见等价保护。
-- 刻意简化：单公司(聚货通总部)、v-permission 键统一为 can(add/edit/del)。
+- 刻意简化：单公司(SYSTEM总部)、v-permission 键统一为 can(add/edit/del)。
 - 无源核心操作遗漏（增/删/改齐全）。

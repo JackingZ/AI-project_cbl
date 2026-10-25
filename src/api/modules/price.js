@@ -86,8 +86,8 @@ export const ADDRESS_AXIS_LIST = [
   { name: '国家', id: '0' }, { name: '国内区域', id: '5' }, { name: '城市区域', id: '100' },
   { name: '仓库区域', id: '101' }, { name: '国家区域', id: '102' }, { name: '州省', id: '1' }, { name: '仓库代码', id: '7' }
 ]
-// 报价对象（category）文案：0聚货通/1&2代理商/3直客/4同行
-export const CATEGORY_LABELS = { '0': '聚货通价', '1': '代理商价', '2': '代理商价', '3': '直客价', '4': '同行价' }
+// 报价对象（category）文案：0SYSTEM/1&2代理商/3直客/4同行
+export const CATEGORY_LABELS = { '0': 'SYSTEM价', '1': '代理商价', '2': '代理商价', '3': '直客价', '4': '同行价' }
 
 // 由 rows 首行 prices 推导矩阵 X 轴列（源 aAxisData 计算）
 // loadType: 2 柜型（label=x.value）；5 卡散重量/方数；其余按 type 0 重量/1 体积，label=lower-upper
@@ -193,7 +193,7 @@ export const chargeApi = defineMock('price_charge_config', () =>
       simc: type === '0' ? Number(((i % 5) + 1).toFixed(2)) : undefined,
       weightCarry: type === '0' ? i % 2 === 0 : undefined,
       weightCarryRule: type === '0' ? (i % 2 === 0 ? 0.5 : 1) : undefined,
-      agent: builtin ? { key: '0', value: '系统' } : { key: 'C1', value: '聚货通' },
+      agent: builtin ? { key: '0', value: '系统' } : { key: 'C1', value: 'SYSTEM' },
       createTime: seedTime(i)
     }
   }), [], 2)

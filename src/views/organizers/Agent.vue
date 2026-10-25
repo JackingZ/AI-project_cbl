@@ -297,7 +297,7 @@ const defaultForm = () => ({
   coopAmount: '', companySize: '', registeredCapital: '', saleType: '直销', platform: '独立站',
   domain: '', markPrefix: '', printServer: '', storeLink: '', brand: '', trademark: '否',
   ifRequestPay: '是', ifPickup: '否',
-  ifManualReview: '否', ifSelfFinance: '否', status: '启用', parentName: '聚货通总部'
+  ifManualReview: '否', ifSelfFinance: '否', status: '启用', parentName: 'SYSTEM总部'
 })
 const form = reactive(defaultForm())
 

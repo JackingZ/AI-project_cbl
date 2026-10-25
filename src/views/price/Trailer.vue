@@ -258,7 +258,7 @@ const serviceList = ref([])
 const serviceList2 = ref([])
 
 const auditDot = a => (a === 1 ? 'card-tip-blue' : a === 2 ? 'card-tip-y' : a === 3 ? 'card-tip-red' : 'card-tip-success')
-const custTag = item => { const t = item.toType; const s = item.toSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '3') return '聚货通价'; return '' }
+const custTag = item => { const t = item.toType; const s = item.toSubtype; if (t === '2') return '代理商价'; if (t === '1' && s === '0') return '直客价'; if (t === '1' && s === '1') return '同行价'; if (t === '3') return 'SYSTEM价'; return '' }
 
 const getTableData = async (p) => {
   if (p === 1) { page.value = 1; popoverShow.value = false }
