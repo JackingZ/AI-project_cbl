@@ -6,6 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
+  base: '/AI-project_cbl/',
   plugins: [
     vue(),
     // Element Plus 按需引入：组件/指令(v-loading)自动注册，
@@ -28,6 +29,7 @@ export default defineConfig({
   },
   server: { port: 5173, open: true },
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         // 仅将稳定的核心框架拆为独立 vendor chunk，利于浏览器长效缓存；

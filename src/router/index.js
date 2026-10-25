@@ -240,7 +240,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHashHistory('/AI-project_cbl/'),
   routes
 })
 
